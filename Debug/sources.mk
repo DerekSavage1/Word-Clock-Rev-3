@@ -34,6 +34,7 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/Numeric_Display \
+Drivers/PEC11R \
 Drivers/STM32F4xx_HAL_Driver/Src \
 Drivers/WS2812B \
 

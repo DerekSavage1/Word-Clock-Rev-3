@@ -1,0 +1,6 @@
+../Drivers/PEC11R/PEC11R.c:18:9:Encoder_GetCount	4	static
+../Drivers/PEC11R/PEC11R.c:23:6:Encoder_SetCount	16	static
+../Drivers/PEC11R/PEC11R.c:28:9:Button_GetCount	4	static
+../Drivers/PEC11R/PEC11R.c:33:6:Button_SetCount	16	static
+../Drivers/PEC11R/PEC11R.c:38:6:Encoder_EXTI_Callback	24	static
+../Drivers/PEC11R/PEC11R.c:64:6:Button_EXTI_Callback	24	static

@@ -30,6 +30,7 @@
 #include "../../Drivers/WS2812B/WS2812B.h"
 #include "../../Drivers/Numeric_Display/Numeric_Display.h"
 #include "Bitmap_Display.h"
+#include "../../Drivers/PEC11R/PEC11R.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,11 +71,13 @@ static void MX_RTC_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// Global variables to keep track of the encoder count and direction
-volatile int32_t encoder_count = 0;
-volatile uint8_t lastState = 0;
-volatile uint8_t button_state = 0;
-volatile uint32_t last_debounce_time = 0;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    // Delegate to specific driver callbacks
+    Encoder_EXTI_Callback(GPIO_Pin);
+    Button_EXTI_Callback(GPIO_Pin);
+}
+
+
 
 /* USER CODE END 0 */
 
@@ -138,7 +141,8 @@ int main(void)
 
 	    char displayStr[6]; // Buffer for "00:00" plus null terminator
 
-	    switch (button_state) {
+
+	    switch (Button_GetCount()) {
 	        case 0:
 	            // Default state, should not display anything.
 	            Segment_Display("STRT");
@@ -148,14 +152,16 @@ int main(void)
 	            break;
 	        case 1:
 	        	if(!hours_set) {
-	        		encoder_count = (sTime.Hours * 10);
+	        		Encoder_SetCount(sTime.Hours * 10);
 	        		hours_set = true;
 	        	}
 
-	        	if(encoder_count > 230) encoder_count = 230; // 23 * 10
-	        	if(encoder_count < 0) encoder_count = 0;
+	        	if(Encoder_GetCount() > 230)
+	        		Encoder_SetCount(230); // 23 * 10
+	        	if(Encoder_GetCount() < 0)
+	        		Encoder_SetCount(0);
 
-	        	sTime.Hours = encoder_count / 10; // Convert to actual hours by dividing by 10
+	        	sTime.Hours = Encoder_GetCount() / 10; // Convert to actual hours by dividing by 10
 	        	sTime.Minutes = 0;
 	        	sTime.Seconds = 0;
 	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
@@ -166,16 +172,18 @@ int main(void)
 	            break;
 	        case 2:
 	        	if(!minutes_set) {
-	        		encoder_count = sTime.Minutes * 10;
+	        		Encoder_SetCount(sTime.Minutes * 10);
 	        		minutes_set = true;
 	        	}
-	            sTime.Minutes = encoder_count;
+	            sTime.Minutes = Encoder_GetCount();
 	            sTime.Seconds = 0;
 
-	            if(encoder_count > 590) encoder_count = 590;  // 59 * 10
-	            if(encoder_count < 0) encoder_count = 0;
+	            if(Encoder_GetCount() > 590)
+	            	Encoder_SetCount(590);  // 59 * 10
+	            if(Encoder_GetCount() < 0)
+	            	Encoder_SetCount(0);
 
-	            sTime.Minutes = encoder_count / 10;
+	            sTime.Minutes = Encoder_GetCount() / 10;
 
 	            snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 	            Segment_Display(displayStr);
@@ -185,22 +193,24 @@ int main(void)
 	            break;
 	        case 3:
 	        	if(!color_set) {
-	        		encoder_count = 0;
+	        		Encoder_SetCount(0);
 	        		color_set = true;
 	        	}
 
-	            if(encoder_count > 160) encoder_count = 160; // 160 * 10
-	            if(encoder_count < 0) encoder_count = 0;
+	            if(Encoder_GetCount() > 160)
+	            	Encoder_SetCount(160); // 160 * 10
+	            if(Encoder_GetCount() < 0)
+	            	Encoder_SetCount(0);
 
-	            color_preset = (encoder_count / 10);
-	        	snprintf(displayStr, sizeof(displayStr), "%04d", (encoder_count / 10));
+	            color_preset = (Encoder_GetCount() / 10);
+	        	snprintf(displayStr, sizeof(displayStr), "%02d", (Encoder_GetCount() / 10));
 	            Segment_Display(displayStr);
 	        	break;
 	        case 4:
-
+	            Button_SetCount(0);
 	        default:
 	            Segment_Display("ERR");
-	            button_state = 0;
+	            Button_SetCount(0);
 	            break;
 
 	    }
@@ -489,52 +499,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-volatile int32_t a_count = 0;
-volatile int32_t b_count = 0;
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    uint8_t currentState;
-    uint8_t aState;
-    uint8_t bState;
-    const uint32_t debounce_delay = 50;  // milliseconds
-
-    // Read the current encoder states
-    aState = HAL_GPIO_ReadPin(GPIOB, ENC_CH_A_Pin);
-    bState = HAL_GPIO_ReadPin(GPIOB, ENC_CH_B_Pin);
-    currentState = (aState << 1) | bState;
-
-    // Only consider state changes if either A or B has generated an interrupt
-    if ((GPIO_Pin == ENC_CH_A_Pin) || (GPIO_Pin == ENC_CH_B_Pin)) {
-        // Determine the rotation direction based on the state transition
-        if ((lastState == 0x0 && currentState == 0x2) ||
-            (lastState == 0x3 && currentState == 0x1) ||
-            (lastState == 0x2 && currentState == 0x3) ||
-            (lastState == 0x1 && currentState == 0x0)) {
-            // Encoder has moved clockwise
-        	encoder_count++;
-        }
-        else if ((lastState == 0x0 && currentState == 0x1) ||
-                 (lastState == 0x1 && currentState == 0x3) ||
-                 (lastState == 0x3 && currentState == 0x2) ||
-                 (lastState == 0x2 && currentState == 0x0)) {
-            // Encoder has moved counterclockwise
-            encoder_count--;
-        }
-
-        // Save the new state
-        lastState = currentState;
-    } else if (GPIO_Pin == BTN_Pin) {
-        uint32_t current_time = HAL_GetTick();  // Assuming HAL_GetTick() gives you the system tick in ms
-
-        if ((current_time - last_debounce_time) > debounce_delay) {
-            // Enough time has passed since the last button press (debounced)
-            button_state++;
-            last_debounce_time = current_time;  // update last debounce time
-        }
-    }
-
-    // Handle other GPIO pins (if any)
-}
 
 /* USER CODE END 4 */
 
