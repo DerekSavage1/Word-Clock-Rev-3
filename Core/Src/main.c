@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "../../Drivers/WS2812B/WS2812B.h"
+#include "../../Drivers/Numeric_Display/Numeric_Display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -286,108 +287,6 @@ int main(void)
   MX_TIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-
-  // Number of digits and definition of MIN (if it's not already defined).
-  #define NUM_DIGITS 4
-  #define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-  // Modify these pins according to your particular board connections
-  #define DIGIT_1_PIN DIG_1_A_Pin
-  #define DIGIT_2_PIN DIG_2_A_Pin
-  #define DIGIT_3_PIN DIG_3_A_Pin
-  #define DIGIT_4_PIN DIG_4_A_Pin
-  #define COLON_PIN   DEC_A_Pin
-
-  // GPIO Ports
-  #define DIGIT_1_PORT GPIOB
-  #define DIGIT_2_PORT GPIOB
-  #define DIGIT_3_PORT GPIOA
-  #define DIGIT_4_PORT GPIOA
-
-  // Segment definitions for numbers and some characters in hexadecimal
-  const uint8_t charToSegmentsMap[] = {
-		    ['0'] = 0x3F, ['1'] = 0x06, ['2'] = 0x5B, ['3'] = 0x4F,
-		    ['4'] = 0x66, ['5'] = 0x6D, ['6'] = 0x7D, ['7'] = 0x07,
-		    ['8'] = 0x7F, ['9'] = 0x6F, ['A'] = 0x77, ['B'] = 0x7C,
-		    ['C'] = 0x39, ['D'] = 0x5E, ['E'] = 0x79, ['F'] = 0x71,
-		    ['G'] = 0x3D, ['H'] = 0x76, ['I'] = 0x30, ['J'] = 0x1E,
-		    ['K'] = 0x76, // Using same as 'H', no unique representation for 'K'
-		    ['L'] = 0x38, ['M'] = 0x37, // 'M' uses same as 'n', no unique representation
-		    ['N'] = 0x54, ['O'] = 0x3F, ['P'] = 0x73, ['Q'] = 0x67,
-		    ['R'] = 0x50, ['S'] = 0x6D, ['T'] = 0x78, ['U'] = 0x3E,
-		    ['V'] = 0x3E, // Using same as 'U', no unique representation for 'V'
-		    ['W'] = 0x2A, // Representation of 'W' is not possible, so using compromise
-		    ['X'] = 0x76, // Using same as 'H', no unique representation for 'X'
-		    ['Y'] = 0x6E, ['Z'] = 0x5B,  // 'Z' uses same as '2'
-			['!'] = 0b10000010,
-      [' '] = 0x00, // Blank character
-      ['.'] = 0x80, // Decimal point assuming it's on a separate segment
-  };
-
-  // Set the segments for the current digit
-  void setSegments(uint8_t segments) {
-      HAL_GPIO_WritePin(GPIOA, SEG_A_K_Pin, (segments & (1 << 0)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA, SEG_B_K_Pin, (segments & (1 << 1)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA, SEG_C_K_Pin, (segments & (1 << 2)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOB, SEG_D_K_Pin, (segments & (1 << 3)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOB, SEG_E_K_Pin, (segments & (1 << 4)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA, SEG_F_K_Pin, (segments & (1 << 5)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA, SEG_G_K_Pin, (segments & (1 << 6)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA, DP_K_Pin, 	(segments & (1 << 7)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-      // Set remaining segments and additional control for common anode/cathode if necessary
-  }
-
-  // Activate a single digit
-  void activateDigit(uint8_t digit) {
-      // Assuming digit is 1 based (1 first digit, 2 second digit, etc)
-      HAL_GPIO_WritePin(DIGIT_1_PORT, DIGIT_1_PIN, digit == 1 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_2_PORT, DIGIT_2_PIN, digit == 2 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_3_PORT, DIGIT_3_PIN, digit == 3 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_4_PORT, DIGIT_4_PIN, digit == 4 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOB, 		  COLON_PIN,   digit == 5 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-  }
-
-
-  // Display up to four characters on the 7-segment displays
-  void Segment_Display(const char* input) {
-
-	    char output[6] = "";  // Assuming maximum input length of 5 digits + null terminator
-	    bool hasColon = false;
-
-	    for (int i = 0; i < strlen(input); i++) {
-	        if (input[i] != ':') {
-	            int len = strlen(output);
-	            output[len] = input[i];
-	            output[len + 1] = '\0';
-	        }
-	        else {
-	        	hasColon = true;
-	        }
-	    }
-
-
-      // clearing all digits
-      HAL_GPIO_WritePin(DIGIT_1_PORT, DIGIT_1_PIN, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_2_PORT, DIGIT_2_PIN, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_3_PORT, DIGIT_3_PIN, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(DIGIT_4_PORT, DIGIT_4_PIN, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOB, 		  COLON_PIN,   GPIO_PIN_RESET);
-
-      uint8_t numChars = MIN(strlen(output), NUM_DIGITS);
-      for (int i = 0; i < (numChars + hasColon); i++) {
-          activateDigit(i + 1); // Activate the correct digit
-          if((i + 1) == 5) { //colon
-        	  setSegments(0b11);
-          } else {
-        	  setSegments(charToSegmentsMap[(uint8_t) output[i]]); // Set the correct segments
-          }
-          HAL_Delay(1); // Delay to allow the segments to light up
-      }
-      activateDigit(0); // Turn off all digits
-  }
-
-
-
 
 
   /* USER CODE END 2 */
