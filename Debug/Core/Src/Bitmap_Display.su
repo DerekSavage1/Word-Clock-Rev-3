@@ -1,0 +1,5 @@
+../Core/Src/Bitmap_Display.c:10:10:getRainbowColor	16	static
+../Core/Src/Bitmap_Display.c:63:6:clear_display_buffer	16	static
+../Core/Src/Bitmap_Display.c:71:6:add_bmp	24	static
+../Core/Src/Bitmap_Display.c:81:6:display_bmp	32	static
+../Core/Src/Bitmap_Display.c:104:6:display_time	16	static
