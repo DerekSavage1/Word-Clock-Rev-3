@@ -2,42 +2,41 @@
 
 ## Overview
 
-This project details the creation of a unique word clock, designed to display the time by illuminating letters in a word-search-esque display. The clock is a combination of hardware and software engineering, enclosed in a 9x9 shadow box frame for ease of manufacturing. 
-
+This project unveils the design and assembly of a distinctive word clock, configured to exhibit time by lighting up letters in a puzzle-like display. A fusion of hardware and software engineering encapsulated in a 9x9 shadow box frame enhances manufacturability. 
 
 ## Technical Details
 
 ### Specs
-- **Display Technology**: Each letter is illuminated by a WS2812B individually adressable RGB LEDs. 
-- **Microcontroller**: Powered by an STM32F4 High Performance Microcontroller.
-- **Real-Time Clock (RTC)**: The RTC logic is managed by the STM32 with the help of a 32.768 kHz external crystal.
-- **User Interface**: Features a 4-digit 7-segment display and a pushable rotary encoder for adjusting the time, color, date and more.
-- **Power Source**: Operates via a USB-C cable, offering convenience and modernity.
-- **Enclosure**: Designed to fit perfectly within a 9x9 shadow box from Michaels, making it easy to integrate into various interior designs.
+- **Display Technology**: Individually addressable WS2812B RGB LEDs illuminate each letter. 
+- **Microcontroller**: Driven by the high-performance STM32F4 Microcontroller.
+- **Real-Time Clock (RTC)**: STM32 employs a 32.768 kHz external crystal to fine-tune the RTC mechanics.
+- **User Interface**: A 4-digit 7-segment display coupled with a pushable rotary encoder allows adjustments for time, color, date, etc.
+- **Power Source**: Powered through a USB-C cable, this design merges convenience with modern trends.
+- **Enclosure**: Tailored to snugly fit a 9x9 shadow box from Michaels, facilitating seamless integration into diverse decor styles.
 
 ### Tools
-- **Software Environment**: The firmware for the STM32F4 is developed using STM32 Cube IDE, a comprehensive tool for STM32 microcontroller programming.
-- **Hardware Enviornment**: All electronic schematics and PCB designs are created in Altium Designer, ensuring professional-grade design quality and ease of manufacturing.
+- **Software Environment**: Leveraging STM32 Cube IDE for the firmware development, this tool stands out for programming STM32 microcontrollers.
+- **Hardware Environment**: Altium Designer was employed for all electronic schematics and PCB layouts, guaranteeing top-tier design quality and manufacturability.
 
 ## Assembly and Setup
 
 ### Building the Clock
 
-1. **Manufacture the Clock**: The Gerber, Bom, and CPL files are included to be sent to the PCB manufacturer of your choice
-2. **Microcontroller Programming**: Microcontroller requires a 6 pin J link adapter to program. See SWD on the board for the programming point
-3. **3D Printing**: Some parts must be 3d printed. They can be joined with M6 nuts and bolts.
-4. **Letter Mask**: A vector file is provided. These are the letters that I am using for my own needs, although there is a row of letters that can be fully customized for displaying custom text. This file will need to be turned into a vinyl sticker to be applied to the front glass.
-5. **Film**: A one-way film can be added to the front of the glass to make the unilluminated letters disappear.
-6. **Prepare back panel**: To show the 7 segment display and to allow the rotary encoder and usb-c to stick out the back the back panel will need to be laser cut. I will soon provide the svg file I used for laser cutting.
-7. **Assemble**: Layer a 9x9 sheet of diffusion paper, the pcb with the letters facing the glass, and secure the back panel into place. 
+1. **Manufacture the Clock**: You'll find the Gerber, BOM, and CPL files for sending to your preferred PCB manufacturer.
+2. **Microcontroller Programming**: A 6 pin J link adapter is necessary for programming the microcontroller. Refer to the SWD on the board for the programming interface.
+3. **3D Printing**: Certain components are to be 3D printed and assembled using M6 nuts and bolts.
+4. **Letter Mask**: Included is a vector file for the mask — these letters cater to my specific requirements, yet the design permits custom text display through full customization of a row of letters. This design needs conversion into a vinyl sticker for the front glass application.
+5. **Film**: Adding a one-way film to the glass front makes the unlit letters vanish from sight.
+6. **Prepare Back Panel**: To accommodate the 7 segment display, the rotary encoder, and the USB-C, the back panel requires laser cutting. I will provide the SVG file used for this purpose shortly.
+7. **Assemble**: Commence with a 9x9 diffusion paper layer, followed by the PCB with letters facing the glass, and finally secure the back panel in place.
 
 ### Operation
 
-- **Setting the Time**: Use the dial to navigate through the hours and minutes, pressing it to switch between them. The 7-segment display shows the current setting.
-- **Powering the Clock**: Connect the clock to a power source using a USB-C cable. The clock will begin displaying the current time.
+- **Setting the Time**: Utilize the dial to cycle through hours and minutes, pressing it to alternate between selections. The current setting is displayed on the 7-segment display.
+- **Powering the Clock**: Simply connect the clock to a power outlet using a USB-C cable, and it will start showcasing the current time.
 
-This project is licensed under [appropriate license], allowing for personal and commercial use with attribution.
+This project is duly licensed under GNU General Public License v3.0 to allow both personal and commercial use, provided due attribution is made.
 
 ## Contact
 
-For any inquiries, please reach out to [Your Name] at [Your Email].
+Should you have any inquiries, feel free to contact me at d.savag1@gmail.com.
