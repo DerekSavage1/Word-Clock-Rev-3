@@ -1,5 +1,7 @@
 # Word Clock
 
+![Test Bench](/TestBench.jpeg)
+
 ## Overview
 
 This project unveils the design and assembly of a distinctive word clock, configured to exhibit time by lighting up letters in a puzzle-like display. A fusion of hardware and software engineering encapsulated in a 9x9 shadow box frame enhances manufacturability. 
@@ -29,6 +31,8 @@ This project unveils the design and assembly of a distinctive word clock, config
 5. **Film**: Adding a one-way film to the glass front makes the unlit letters vanish from sight.
 6. **Prepare Back Panel**: To accommodate the 7 segment display, the rotary encoder, and the USB-C, the back panel requires laser cutting. I will provide the SVG file used for this purpose shortly.
 7. **Assemble**: Commence with a 9x9 diffusion paper layer, followed by the PCB with letters facing the glass, and finally secure the back panel in place.
+
+![Assembled Clock](/Assembled.jpeg)
 
 ### Operation
 
