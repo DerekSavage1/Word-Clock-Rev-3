@@ -7,24 +7,29 @@
 
 #include "WS2812B.h"
 
-uint8_t LED_Data[NUM_LEDS][3]; // Remove unnecessary LED num
+// Assuming definitions for NUM_LEDS and RESET_SLOTS somewhere in WS2812B.h,
+// along with the definition of ONE and ZERO duty cycles.
+
+uint8_t LED_Data[NUM_LEDS][3]; // RGB Data for each LED
 volatile int datasentflag;
 
+// Provide boundaries to prevent out-of-bound access.
 void Set_LED(int LEDnum, int Red, int Green, int Blue) {
-    LED_Data[LEDnum][0] = Green;
-    LED_Data[LEDnum][1] = Red;
-    LED_Data[LEDnum][2] = Blue;
+    if(LEDnum >= 0 && LEDnum < NUM_LEDS) {
+        LED_Data[LEDnum][0] = Green;
+        LED_Data[LEDnum][1] = Red;
+        LED_Data[LEDnum][2] = Blue;
+    }
+    // Else, you might want to handle the error, maybe with a debug message.
 }
 
 uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
-
-
-void WS2812B_Send(TIM_HandleTypeDef htim1) {
+void WS2812B_Send(TIM_HandleTypeDef *htim) { // Changed to pointer to match typical HAL use.
     uint32_t indx = 0;
     uint32_t data;
 
-    // Shifting colors into 24 bit buffer
+    // Shifting colors into 24-bit buffer
     for (int i = 0; i < NUM_LEDS; i++) {
 
         data = ((LED_Data[i][0] << 16) | (LED_Data[i][1] << 8) | (LED_Data[i][2]));
@@ -43,14 +48,17 @@ void WS2812B_Send(TIM_HandleTypeDef htim1) {
         pwmData[indx++] = 0;
     }
 
-    // Start transmitting PWM data
-    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmData, indx);
+    // Ensure we don't exceed the buffer size, which should never happen by design, but it's good to check.
+    if(indx <= sizeof(pwmData)/sizeof(pwmData[0])) {
+        HAL_TIM_PWM_Start_DMA(htim, TIM_CHANNEL_1, (uint32_t*)pwmData, indx);
 
-    // Wait until the data has been sent
-    while (!datasentflag) {}
+        // Wait until the data has been sent
+        while (!datasentflag) {}
 
-    // Reset the data sent flag for the next transmission
-    datasentflag = 0;
+        // Reset the data sent flag for the next transmission
+        datasentflag = 0;
+    }
+    // Else, handle the error. Buffer overflow is avoided but why did it occur?
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {

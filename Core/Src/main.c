@@ -188,12 +188,12 @@ int main(void)
 
 
 
-//	    __HAL_TIM_SET_COUNTER(&htim3, counter);
+	    __HAL_TIM_SET_COUNTER(&htim3, counter);
 	    Segment_Display(displayStr);
 
 		display_time(sTime.Hours, sTime.Minutes);
     	display_bmp(color);
-    	WS2812B_Send(htim1);
+    	WS2812B_Send(&htim1);
 
     	clear_display_buffer();
 

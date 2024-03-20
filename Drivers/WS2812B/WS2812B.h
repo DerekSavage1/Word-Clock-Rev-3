@@ -17,6 +17,6 @@
 #define RESET_SLOTS 50  // Number of slots for reset signal. Update if needed.
 
 void Set_LED(int, int, int, int);
-void WS2812B_Send(TIM_HandleTypeDef);
+void WS2812B_Send(TIM_HandleTypeDef *htim);
 
 #endif /* WS2812B_WS2812B_H_ */
