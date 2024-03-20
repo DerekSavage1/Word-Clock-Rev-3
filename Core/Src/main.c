@@ -34,6 +34,15 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+  // Enumeration for different states
+  typedef enum {
+      SLEEP,
+      SET_HOURS,
+	  SET_MINUTES,
+      SET_COLOR,
+      SET_BRIGHTNESS
+  } DeviceState;
+
 
 /* USER CODE END PTD */
 
@@ -55,8 +64,14 @@ TIM_HandleTypeDef htim3;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
-volatile uint8_t counter = 0;
-
+volatile uint16_t counter = 0;
+RTC_TimeTypeDef sTime;
+RTC_DateTypeDef sDate;
+volatile uint16_t color = 0;
+volatile uint16_t brightness = 0;
+volatile DeviceState currentState = SLEEP;
+volatile int sensitivity = 10;
+char displayStr[128]; // Buffer for "00:00" plus null terminator
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,8 +81,10 @@ static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
-/* USER CODE BEGIN PFP */
 
+/* USER CODE BEGIN PFP */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+int clampValue(int value, int minVal, int maxVal);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -111,16 +128,25 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
+  uint16_t clampValue(uint16_t value, uint16_t minVal, uint16_t maxVal) {
+      if (abs(0xFFFF - value) < abs(maxVal - value)) {
+    	  return minVal;
+      } else {
+          // Normal range (does not wrap around)
+          if (value < minVal) return minVal;
+          if (value > maxVal) return maxVal;
+          return value;
+      }
+  }
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  RTC_TimeTypeDef sTime;
-  RTC_DateTypeDef sDate;
-  bool hours_set = false;
-  bool minutes_set = false;
-  bool color_set = false;
-  uint8_t color_preset = 0;
+
 
   while (1)
   {
@@ -129,101 +155,48 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  counter = __HAL_TIM_GET_COUNTER(&htim3); // Read encoder value directly
 
-
 		// Update the RTC structure with the current time
 		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
 		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
 
 
-
-	    char displayStr[6]; // Buffer for "00:00" plus null terminator
-    	snprintf(displayStr, sizeof(displayStr), "%04i", counter);
-    	Segment_Display(displayStr);
-
-
-
-
-	    switch (1) {
-	        case 0:
-	            // Default state, should not display anything.
-
-	        	snprintf(displayStr, sizeof(displayStr), "%04i", counter);
-	        	Segment_Display(displayStr);
-
-	            hours_set = false;  // Reset hours_set flag
-	            minutes_set = false;
-	            color_set = false;
+	    switch(currentState) {
+	        case SLEEP:
+	        	snprintf(displayStr, sizeof(displayStr), "----");
 	            break;
-	        case 1:
-	        	if(!hours_set) {
-	        		counter = (sTime.Hours * 10);
-	        		hours_set = true;
-	        	}
-
-	        	if(counter > 230)
-	        		counter = 230; // 23 * 10
-	        	if(counter < 0)
-	        		counter = 0;
-
-	        	sTime.Hours = counter / 10; // Convert to actual hours by dividing by 10
-	        	sTime.Minutes = 0;
-	        	sTime.Seconds = 0;
+	        case SET_HOURS:
+	        	counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
+	        	sTime.Hours = counter / sensitivity;
 	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
-	        	Segment_Display(displayStr);
-
-	        	//Might be using this function too often...
-        		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-        		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 	            break;
-	        case 2:
-	        	if(!minutes_set) {
-	        		counter = (sTime.Minutes * 10);
-	        		minutes_set = true;
-	        	}
-	            sTime.Minutes = counter;
-	            sTime.Seconds = 0;
-
-	            if(counter > 590)
-	            	counter = 590;  // 59 * 10
-	            if(counter < 0)
-	            	counter = 0;
-
-	            sTime.Minutes = counter / 10;
-
-	            snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
-	            Segment_Display(displayStr);
-
-
+	        case SET_MINUTES:
+	        	counter = clampValue(counter, 0, 59 * sensitivity); //59 Minutes
+	        	sTime.Minutes = counter / sensitivity;
+	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 	            break;
-	        case 3:
-	        	if(!color_set) {
-	        		counter = 0;
-	        		color_set = true;
-	        	}
-
-	            if(counter > 160)
-	            	counter =160; // 160 * 10
-	            if(counter < 0)
-	            	counter = 0;
-
-	            color_preset = (counter / 10);
-	        	snprintf(displayStr, sizeof(displayStr), "%02d", (counter / 10));
-	            Segment_Display(displayStr);
-	        	break;
-	        case 4:
-//	            Button_SetCount(0);
-	        default:
-	            Segment_Display("ERR");
-//	            Button_SetCount(0);
+	        case SET_COLOR:
+	        	counter = clampValue(counter, 0, 16 * sensitivity); //16 Color Presets
+	        	color = counter / sensitivity;
+	        	snprintf(displayStr, sizeof(displayStr), "%04u", color);
 	            break;
-
+	        case SET_BRIGHTNESS:
+	        	counter = clampValue(counter, 1, 100 * sensitivity); //1-100% brightness
+	        	brightness = counter / (sensitivity/2);
+	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
+	            break;
 	    }
 
-	display_time(sTime.Hours, sTime.Minutes);
-	display_bmp(color_preset);
-	WS2812B_Send(htim1);
 
-	clear_display_buffer();
+
+//	    __HAL_TIM_SET_COUNTER(&htim3, counter);
+	    Segment_Display(displayStr);
+
+		display_time(sTime.Hours, sTime.Minutes);
+    	display_bmp(color);
+    	WS2812B_Send(htim1);
+
+    	clear_display_buffer();
+
   }
   /* USER CODE END 3 */
 }
@@ -522,16 +495,59 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ENC_CH_A_Pin ENC_CH_B_Pin */
-  GPIO_InitStruct.Pin = ENC_CH_A_Pin|ENC_CH_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
+void switchState(void) {
 
+    //state-specific initialization
+    switch(currentState) {
+        case SLEEP:
+      	  counter = sTime.Hours * sensitivity;
+            break;
+        case SET_HOURS:
+      	  counter = sTime.Minutes * sensitivity;
+      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
+      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+            break;
+        case SET_MINUTES:
+      	  counter = color * sensitivity;
+      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
+      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+            break;
+        case SET_COLOR:
+      	  counter = brightness * (sensitivity/2);
+            break;
+        case SET_BRIGHTNESS:
+      	  counter = 0;
+            break;
+    }
+
+      currentState = (currentState + 1) % 5; // There are 5 states
+
+      __HAL_TIM_SET_COUNTER(&htim3, counter);
+
+  }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == BUTTON_Pin) {
+    counter++;
+    switchState();
+  } else {
+      __NOP();
+  }
+}
 
 
 /* USER CODE END 4 */
