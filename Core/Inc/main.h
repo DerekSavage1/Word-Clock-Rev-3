@@ -87,13 +87,8 @@ void Error_Handler(void);
 #define DIG_1_A_GPIO_Port GPIOB
 #define ENC_CH_A_Pin GPIO_PIN_13
 #define ENC_CH_A_GPIO_Port GPIOB
-#define ENC_CH_A_EXTI_IRQn EXTI15_10_IRQn
 #define ENC_CH_B_Pin GPIO_PIN_14
 #define ENC_CH_B_GPIO_Port GPIOB
-#define ENC_CH_B_EXTI_IRQn EXTI15_10_IRQn
-#define BTN_Pin GPIO_PIN_15
-#define BTN_GPIO_Port GPIOB
-#define BTN_EXTI_IRQn EXTI15_10_IRQn
 #define LED_Pin GPIO_PIN_15
 #define LED_GPIO_Port GPIOA
 

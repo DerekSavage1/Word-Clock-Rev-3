@@ -30,7 +30,6 @@
 #include "../../Drivers/WS2812B/WS2812B.h"
 #include "../../Drivers/Numeric_Display/Numeric_Display.h"
 #include "Bitmap_Display.h"
-#include "../../Drivers/PEC11R/PEC11R.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,9 +51,11 @@
 RTC_HandleTypeDef hrtc;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim3;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
+volatile uint8_t counter = 0;
 
 /* USER CODE END PV */
 
@@ -64,20 +65,13 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_RTC_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    // Delegate to specific driver callbacks
-    Encoder_EXTI_Callback(GPIO_Pin);
-    Button_EXTI_Callback(GPIO_Pin);
-}
-
-
 
 /* USER CODE END 0 */
 
@@ -88,6 +82,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
 
   /* USER CODE END 1 */
 
@@ -112,8 +107,9 @@ int main(void)
   MX_DMA_Init();
   MX_TIM1_Init();
   MX_RTC_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
   /* USER CODE END 2 */
 
@@ -131,6 +127,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  counter = __HAL_TIM_GET_COUNTER(&htim3); // Read encoder value directly
 
 
 		// Update the RTC structure with the current time
@@ -140,92 +137,88 @@ int main(void)
 
 
 	    char displayStr[6]; // Buffer for "00:00" plus null terminator
+    	snprintf(displayStr, sizeof(displayStr), "%04i", counter);
+    	Segment_Display(displayStr);
 
 
-	    switch (Button_GetCount()) {
+
+
+	    switch (1) {
 	        case 0:
 	            // Default state, should not display anything.
-	            Segment_Display("STRT");
+
+	        	snprintf(displayStr, sizeof(displayStr), "%04i", counter);
+	        	Segment_Display(displayStr);
+
 	            hours_set = false;  // Reset hours_set flag
 	            minutes_set = false;
 	            color_set = false;
 	            break;
 	        case 1:
 	        	if(!hours_set) {
-	        		Encoder_SetCount(sTime.Hours * 10);
+	        		counter = (sTime.Hours * 10);
 	        		hours_set = true;
 	        	}
 
-	        	if(Encoder_GetCount() > 230)
-	        		Encoder_SetCount(230); // 23 * 10
-	        	if(Encoder_GetCount() < 0)
-	        		Encoder_SetCount(0);
+	        	if(counter > 230)
+	        		counter = 230; // 23 * 10
+	        	if(counter < 0)
+	        		counter = 0;
 
-	        	sTime.Hours = Encoder_GetCount() / 10; // Convert to actual hours by dividing by 10
+	        	sTime.Hours = counter / 10; // Convert to actual hours by dividing by 10
 	        	sTime.Minutes = 0;
 	        	sTime.Seconds = 0;
 	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 	        	Segment_Display(displayStr);
 
+	        	//Might be using this function too often...
         		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
         		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 	            break;
 	        case 2:
 	        	if(!minutes_set) {
-	        		Encoder_SetCount(sTime.Minutes * 10);
+	        		counter = (sTime.Minutes * 10);
 	        		minutes_set = true;
 	        	}
-	            sTime.Minutes = Encoder_GetCount();
+	            sTime.Minutes = counter;
 	            sTime.Seconds = 0;
 
-	            if(Encoder_GetCount() > 590)
-	            	Encoder_SetCount(590);  // 59 * 10
-	            if(Encoder_GetCount() < 0)
-	            	Encoder_SetCount(0);
+	            if(counter > 590)
+	            	counter = 590;  // 59 * 10
+	            if(counter < 0)
+	            	counter = 0;
 
-	            sTime.Minutes = Encoder_GetCount() / 10;
+	            sTime.Minutes = counter / 10;
 
 	            snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 	            Segment_Display(displayStr);
 
-        		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-        		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
 	            break;
 	        case 3:
 	        	if(!color_set) {
-	        		Encoder_SetCount(0);
+	        		counter = 0;
 	        		color_set = true;
 	        	}
 
-	            if(Encoder_GetCount() > 160)
-	            	Encoder_SetCount(160); // 160 * 10
-	            if(Encoder_GetCount() < 0)
-	            	Encoder_SetCount(0);
+	            if(counter > 160)
+	            	counter =160; // 160 * 10
+	            if(counter < 0)
+	            	counter = 0;
 
-	            color_preset = (Encoder_GetCount() / 10);
-	        	snprintf(displayStr, sizeof(displayStr), "%02d", (Encoder_GetCount() / 10));
+	            color_preset = (counter / 10);
+	        	snprintf(displayStr, sizeof(displayStr), "%02d", (counter / 10));
 	            Segment_Display(displayStr);
 	        	break;
 	        case 4:
-	            Button_SetCount(0);
+//	            Button_SetCount(0);
 	        default:
 	            Segment_Display("ERR");
-	            Button_SetCount(0);
+//	            Button_SetCount(0);
 	            break;
 
 	    }
 
-
-
-	    HAL_GPIO_WritePin(GPIOA, LED_Pin, 1);
-
-	    HAL_Delay(1);
-	    HAL_GPIO_WritePin(GPIOA, LED_Pin, 0);
-
-
-
-
-	// Now you can safely use sTime to display the time or perform other operations
 	display_time(sTime.Hours, sTime.Minutes);
 	display_bmp(color_preset);
 	WS2812B_Send(htim1);
@@ -421,6 +414,55 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_Encoder_InitTypeDef sConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 0;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC2Filter = 0;
+  if (HAL_TIM_Encoder_Init(&htim3, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -431,7 +473,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 7, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
@@ -446,6 +488,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -481,19 +524,9 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : ENC_CH_A_Pin ENC_CH_B_Pin */
   GPIO_InitStruct.Pin = ENC_CH_A_Pin|ENC_CH_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BTN_Pin */
-  GPIO_InitStruct.Pin = BTN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
