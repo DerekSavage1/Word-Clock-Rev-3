@@ -28,7 +28,7 @@ void clear_display_buffer();
 void add_bmp(const uint16_t bmp[12]);
 
 // Display the bitmap using a set color
-void display_bmp(uint32_t preset);
+void display_bmp(uint16_t preset, uint16_t color);
 
 // Display time on the bitmap display
 void display_time(int hour, int minute);

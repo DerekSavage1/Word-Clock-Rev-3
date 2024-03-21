@@ -7,6 +7,17 @@
 
 #include "Bitmap_Display.h"
 
+// Gamma brightness lookup table <https://victornpb.github.io/gamma-table-generator>
+// gamma = 2.00 steps = 100 range = 0-1023
+const uint16_t gamma_lut[100] = {
+     0,   0,   0,   1,   2,   3,   4,   5,   7,   8,  10,  13,  15,  18,  20,  23,
+    27,  30,  34,  38,  42,  46,  51,  55,  60,  65,  71,  76,  82,  88,  94, 100,
+   107, 114, 121, 128, 135, 143, 151, 159, 167, 175, 184, 193, 202, 211, 221, 231,
+   240, 251, 261, 271, 282, 293, 304, 316, 327, 339, 351, 363, 376, 388, 401, 414,
+   428, 441, 455, 469, 483, 497, 511, 526, 541, 556, 572, 587, 603, 619, 635, 651,
+   668, 685, 702, 719, 736, 754, 772, 790, 808, 827, 845, 864, 883, 903, 922, 942,
+   962, 982,1002,1023,};
+
 uint32_t getRainbowColor(uint8_t colorOption) {
     switch (colorOption) {
         case 1:
@@ -78,18 +89,32 @@ void add_bmp(const uint16_t bmp[12]) {
     }
 }
 
-void display_bmp(uint32_t preset) {
+void display_bmp(uint16_t preset, uint16_t brightness) {
+    if (brightness < 1 || brightness > 100) {
+        // Ensure the brightness index is within the valid range to avoid out-of-bounds access
+        return;
+    }
 
-	uint32_t color = getRainbowColor(preset);
+    uint32_t color = getRainbowColor(preset);
     // Extract the red, green, and blue components from the color
     uint8_t red = (color >> 16) & 0xFF;
     uint8_t green = (color >> 8) & 0xFF;
     uint8_t blue = color & 0xFF;
 
+    // Adjust the brightness based on the gamma lookup table
+    // Since the maximum value in gamma_lut is 1023 (for brightness=100),
+    // and the maximum value for each color component is 255, a scaling is required.
+    uint16_t brightnessValue = gamma_lut[brightness - 1];
+
+    // Scale and adjust the RGB values based on the brightness
+    red = (uint8_t)(((uint32_t)red * brightnessValue) / 1023);
+    green = (uint8_t)(((uint32_t)green * brightnessValue) / 1023);
+    blue = (uint8_t)(((uint32_t)blue * brightnessValue) / 1023);
+
     for (int row = 0; row < 12; row++) {
         for (int col = 0; col < 11; col++) {
             if (displayBuffer[row][col] & 1) { // Check if the bit is set
-                // Set the LED to the specified color
+                // Set the LED to the adjusted color for specified brightness
                 Set_LED((row * 11) + col, red, green, blue);
             } else {
                 // Turn the LED off

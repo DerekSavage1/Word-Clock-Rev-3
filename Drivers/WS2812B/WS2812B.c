@@ -29,7 +29,7 @@ void WS2812B_Send(TIM_HandleTypeDef *htim) { // Changed to pointer to match typi
     uint32_t indx = 0;
     uint32_t data;
 
-    // Shifting colors into 24-bit buffer
+//     Shifting colors into 24-bit buffer
     for (int i = 0; i < NUM_LEDS; i++) {
 
         data = ((LED_Data[i][0] << 16) | (LED_Data[i][1] << 8) | (LED_Data[i][2]));
@@ -50,15 +50,14 @@ void WS2812B_Send(TIM_HandleTypeDef *htim) { // Changed to pointer to match typi
 
     // Ensure we don't exceed the buffer size, which should never happen by design, but it's good to check.
     if(indx <= sizeof(pwmData)/sizeof(pwmData[0])) {
+    	if((pwmData == NULL) && (indx > 0U))
+    		return;
+
         HAL_TIM_PWM_Start_DMA(htim, TIM_CHANNEL_1, (uint32_t*)pwmData, indx);
-
-        // Wait until the data has been sent
         while (!datasentflag) {}
-
-        // Reset the data sent flag for the next transmission
         datasentflag = 0;
     }
-    // Else, handle the error. Buffer overflow is avoided but why did it occur?
+
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {

@@ -68,10 +68,14 @@ volatile uint16_t counter = 0;
 RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
 volatile uint16_t color = 0;
-volatile uint16_t brightness = 0;
+volatile uint16_t brightness = 50;
 volatile DeviceState currentState = SLEEP;
 volatile int sensitivity = 10;
 char displayStr[128]; // Buffer for "00:00" plus null terminator
+bool userIsConfiguring = false;
+volatile uint32_t tick = 0;
+uint16_t refreshRate = 1000;
+bool stateChangeRequest = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,7 +85,6 @@ static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
-
 /* USER CODE BEGIN PFP */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 int clampValue(int value, int minVal, int maxVal);
@@ -89,6 +92,57 @@ int clampValue(int value, int minVal, int maxVal);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void switchState(void) {
+
+    //state-specific initialization
+    switch(currentState) {
+        case SLEEP:
+      	  counter = sTime.Hours * sensitivity;
+      	  userIsConfiguring = true;
+            break;
+        case SET_HOURS:
+      	  counter = sTime.Minutes * sensitivity;
+      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
+      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+            break;
+        case SET_MINUTES:
+      	  counter = color * sensitivity;
+      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
+      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+            break;
+        case SET_COLOR:
+      	  counter = brightness * (sensitivity/2);
+            break;
+        case SET_BRIGHTNESS:
+      	  counter = 0;
+      	  displayStr[0] = '\0';
+      	  userIsConfiguring = false;
+            break;
+    }
+
+      currentState = (currentState + 1) % 5; // There are 5 states
+
+      __HAL_TIM_SET_COUNTER(&htim3, counter);
+
+}
+
+void checkButtonPress(void) {
+    static GPIO_PinState lastButtonState = GPIO_PIN_SET; // Assume button is initially not pressed (HIGH due to pull-up).
+    GPIO_PinState currentButtonState;
+
+    // Read the current state of the button GPIO pin.
+    currentButtonState = HAL_GPIO_ReadPin(GPIOB, BUTTON_Pin);
+
+    // Check if button state has transitioned from HIGH to LOW.
+    if (lastButtonState == GPIO_PIN_SET && currentButtonState == GPIO_PIN_RESET) {
+        // Button was pressed - perform actions here.
+        switchState(); // Call the state switch function only on the transition.
+    }
+
+    // Update the last button state.
+    lastButtonState = currentButtonState;
+}
 
 /* USER CODE END 0 */
 
@@ -153,16 +207,28 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  counter = __HAL_TIM_GET_COUNTER(&htim3); // Read encoder value directly
 
-		// Update the RTC structure with the current time
-		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+	  checkButtonPress();
+	  if(stateChangeRequest){
+		  switchState();
+		  stateChangeRequest = !stateChangeRequest;
+	  }
+
+
+
+
+	    if(userIsConfiguring)
+	  	  counter = __HAL_TIM_GET_COUNTER(&htim3); // Read encoder value directly
+
+
+			// Update the RTC structure with the current time
+			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
+			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
 
 
 	    switch(currentState) {
 	        case SLEEP:
-	        	snprintf(displayStr, sizeof(displayStr), "----");
+	        	snprintf(displayStr, sizeof(displayStr), "%s", "      ");
 	            break;
 	        case SET_HOURS:
 	        	counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
@@ -182,20 +248,23 @@ int main(void)
 	        case SET_BRIGHTNESS:
 	        	counter = clampValue(counter, 1, 100 * sensitivity); //1-100% brightness
 	        	brightness = counter / (sensitivity/2);
-	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
+	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness/2);
 	            break;
 	    }
 
+	    if(userIsConfiguring) {
+		    __HAL_TIM_SET_COUNTER(&htim3, counter);
+		    Segment_Display(displayStr);
+	    }
 
 
-	    __HAL_TIM_SET_COUNTER(&htim3, counter);
-	    Segment_Display(displayStr);
+			display_time(sTime.Hours, sTime.Minutes);
+		    display_bmp(color, brightness);
+			WS2812B_Send(&htim1);
+			clear_display_buffer();
 
-		display_time(sTime.Hours, sTime.Minutes);
-    	display_bmp(color);
-    	WS2812B_Send(&htim1);
 
-    	clear_display_buffer();
+
 
   }
   /* USER CODE END 3 */
@@ -446,7 +515,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 7, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 8, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
@@ -497,58 +566,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
-void switchState(void) {
-
-    //state-specific initialization
-    switch(currentState) {
-        case SLEEP:
-      	  counter = sTime.Hours * sensitivity;
-            break;
-        case SET_HOURS:
-      	  counter = sTime.Minutes * sensitivity;
-      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
-            break;
-        case SET_MINUTES:
-      	  counter = color * sensitivity;
-      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
-            break;
-        case SET_COLOR:
-      	  counter = brightness * (sensitivity/2);
-            break;
-        case SET_BRIGHTNESS:
-      	  counter = 0;
-            break;
-    }
-
-      currentState = (currentState + 1) % 5; // There are 5 states
-
-      __HAL_TIM_SET_COUNTER(&htim3, counter);
-
-  }
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if(GPIO_Pin == BUTTON_Pin) {
-    counter++;
-    switchState();
-  } else {
-      __NOP();
-  }
-}
-
 
 /* USER CODE END 4 */
 

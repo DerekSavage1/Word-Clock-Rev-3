@@ -87,7 +87,6 @@ void Error_Handler(void);
 #define DIG_1_A_GPIO_Port GPIOB
 #define BUTTON_Pin GPIO_PIN_15
 #define BUTTON_GPIO_Port GPIOB
-#define BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define LED_Pin GPIO_PIN_15
 #define LED_GPIO_Port GPIOA
 
