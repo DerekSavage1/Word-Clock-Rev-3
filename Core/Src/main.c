@@ -246,15 +246,20 @@ int main(void)
 	        	snprintf(displayStr, sizeof(displayStr), "%04u", color);
 	            break;
 	        case SET_BRIGHTNESS:
-	        	counter = clampValue(counter, 1, 100 * sensitivity); //1-100% brightness
-	        	brightness = counter / (sensitivity/2);
-	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness/2);
+	        	counter = clampValue(counter, 1, 100 * (sensitivity / 2)); //1-100% brightness
+	        	brightness = counter / (sensitivity / 2);
+	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
 	            break;
 	    }
 
 	    if(userIsConfiguring) {
 		    __HAL_TIM_SET_COUNTER(&htim3, counter);
 		    Segment_Display(displayStr);
+	    }
+
+	    if(sTime.Hours >= 19) { //night time
+	    	if(brightness > 70)
+	    		brightness = brightness * .70;
 	    }
 
 
