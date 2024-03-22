@@ -48,6 +48,12 @@
 	  SET_YEAR,
   } DeviceState;
 
+  typedef enum DateType {
+      SYSTEM_DATE,
+      ANNIVERSARY_DATE,
+      BIRTHDAY_DATE
+  } DateType;
+
 
 /* USER CODE END PTD */
 
@@ -77,6 +83,8 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 volatile uint16_t counter = 0;
 RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
+RTC_DateTypeDef aDate;
+RTC_DateTypeDef bDate;
 volatile uint16_t color = 0;
 volatile uint16_t brightness = 50;
 volatile DeviceState currentState = SLEEP;
@@ -91,6 +99,7 @@ uint32_t delayMs = 375;
 bool isOff = true;
 bool isSet = true;
 uint8_t lastLED = 0xFF;
+DateType currentDateType = SYSTEM_DATE;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -141,23 +150,34 @@ uint16_t clampValue(uint16_t value, uint16_t minVal, uint16_t maxVal) {
 
 bool userSelectingFeature = true; // True when in SELECT state to decide what feature to adjust
 
-void switchState(void) {
+void switchState(RTC_DateTypeDef * tDate) {
     switch(currentState) {
         case SLEEP:
             currentState = WAKE;
             break;
         case WAKE:
             currentState = SELECT;
+
             break;
         case SELECT:
         	switch((counter / sensitivity)){
-        	case 2:
+        	case 0:
         		counter = sTime.Hours * sensitivity;
         		currentState = SET_HOURS;
         		break;
-        	case 3:
+        	case 1:
         		currentState = SET_COLOR;
         		counter = color * sensitivity;
+        		break;
+        	case 2:
+        		currentDateType = ANNIVERSARY_DATE;
+            	counter = aDate.Month * sensitivity;
+            	currentState = SET_MONTH;
+        		break;
+        	case 3:
+        		currentDateType = BIRTHDAY_DATE;
+            	counter = bDate.Month * sensitivity;
+            	currentState = SET_MONTH;
         		break;
         	}
             break;
@@ -175,20 +195,29 @@ void switchState(void) {
             currentState = SET_MONTH; // Return to SLEEP after setting time
             break;
         case SET_MONTH:
-        	counter = sDate.Date * sensitivity;
-        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	counter = tDate->Date * sensitivity;
+        	if(currentDateType == SYSTEM_DATE){
+            	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+            	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	}
+
         	currentState = SET_DAY;
         	break;
         case SET_DAY:
-        	counter = sDate.Year * sensitivity;
-        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	counter = tDate->Year * sensitivity;
+        	if(currentDateType == SYSTEM_DATE) {
+            	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+            	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	}
+
         	currentState = SET_YEAR;
         	break;
         case SET_YEAR:
-        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	if(currentDateType == SYSTEM_DATE) {
+            	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+            	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	}
+
         	currentState = SLEEP;
         	break;
         case SET_COLOR:
@@ -215,7 +244,9 @@ void checkButtonPress(void) {
     // Check if button state has transitioned from HIGH to LOW.
     if (lastButtonState == GPIO_PIN_SET && currentButtonState == GPIO_PIN_RESET) {
         // Button was pressed - perform actions here.
-        switchState(); // Call the state switch function only on the transition.
+    	stateChangeRequest = true;
+    } else {
+    	stateChangeRequest = false;
     }
 
     // Update the last button state.
@@ -238,25 +269,25 @@ void SetMinutes() {
     snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 }
 
-int SetMonth() {
+int SetMonth(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 12 * sensitivity); //12 months
-    sDate.Month = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u%02u", sDate.Month, sDate.Date);
+    tDate->Month = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u%02u", tDate->Month, tDate->Date);
     return counter / sensitivity;
 }
 
-int SetDay() {
+int SetDay(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 31 * sensitivity); //31 days
     //FIXME: user could enter February 31 which is wrong
-    sDate.Date = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u%02u", sDate.Month, sDate.Date);
+    tDate->Date = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u%02u", tDate->Month, tDate->Date);
     return counter / sensitivity;
 }
 
-int SetYear() {
+int SetYear(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 3000 * sensitivity); //12 months
-    sDate.Year = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%04u", sDate.Year);
+    tDate->Year = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%04u", tDate->Year);
     return counter / sensitivity;
 }
 
@@ -343,13 +374,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  counter = __HAL_TIM_GET_COUNTER(&htim3);
+	counter = __HAL_TIM_GET_COUNTER(&htim3);
 
-	  checkButtonPress();
-	  if(stateChangeRequest){
-		  switchState();
-		  stateChangeRequest = !stateChangeRequest;
-	  }
+	checkButtonPress();
+	if(stateChangeRequest){
+		switchState((currentDateType == SYSTEM_DATE) ? &sDate : (currentDateType == BIRTHDAY_DATE) ? &bDate : &aDate);
+		stateChangeRequest = !stateChangeRequest;
+	}
 
 	// get time and get date must both be called
 	HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
@@ -373,23 +404,23 @@ int main(void)
 			SetMinutes();
 			break;
 		case SET_MONTH:
-			SetMonth();
+			SetMonth((currentDateType == SYSTEM_DATE) ? &sDate : (currentDateType == BIRTHDAY_DATE) ? &bDate : &aDate);
 			break;
 		case SET_DAY:
-			SetDay();
+			SetDay((currentDateType == SYSTEM_DATE) ? &sDate : (currentDateType == BIRTHDAY_DATE) ? &bDate : &aDate);
 			break;
 		case SET_YEAR:
-			SetYear();
+			SetYear((currentDateType == SYSTEM_DATE) ? &sDate : (currentDateType == BIRTHDAY_DATE) ? &bDate : &aDate);
 			break;
 		case SET_COLOR:
-			SetColor();
+			SetColor(&sDate);
 			break;
 		case SET_BRIGHTNESS:
 			SetBrightness();
 			break;
+		default:
+			break;
 	}
-
-
 
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
