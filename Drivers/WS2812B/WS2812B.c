@@ -7,21 +7,29 @@
 
 #include "WS2812B.h"
 
-// Assuming definitions for NUM_LEDS and RESET_SLOTS somewhere in WS2812B.h,
-// along with the definition of ONE and ZERO duty cycles.
-
-uint8_t LED_Data[NUM_LEDS][3]; // RGB Data for each LED
+uint8_t LED_Data[NUM_LEDS][3]; // color data green / red / blue
 volatile int datasentflag;
 
-// Provide boundaries to prevent out-of-bound access.
+
 void Set_LED(int LEDnum, int Red, int Green, int Blue) {
     if(LEDnum >= 0 && LEDnum < NUM_LEDS) {
         LED_Data[LEDnum][0] = Green;
         LED_Data[LEDnum][1] = Red;
         LED_Data[LEDnum][2] = Blue;
     }
-    // Else, you might want to handle the error, maybe with a debug message.
 }
+
+void Set_LED_Hex(int LEDnum, uint32_t color) {
+    if(LEDnum >= 0 && LEDnum < NUM_LEDS) {
+        uint8_t Red = (color >> 16) & 0xFF;
+        uint8_t Green = (color >> 8) & 0xFF;
+        uint8_t Blue = color & 0xFF;
+        LED_Data[LEDnum][0] = Green;
+        LED_Data[LEDnum][1] = Red;
+        LED_Data[LEDnum][2] = Blue;
+    }
+}
+
 
 uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 

@@ -37,10 +37,13 @@
   // Enumeration for different states
   typedef enum {
       SLEEP,
+	  WAKE,
+	  SELECT,
+	  ROUTE,
       SET_HOURS,
 	  SET_MINUTES,
       SET_COLOR,
-      SET_BRIGHTNESS
+      SET_BRIGHTNESS,
   } DeviceState;
 
 
@@ -48,7 +51,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LED_SET   136
+#define LED_DELETE 137
+#define LED_SET_TIME 141
+#define LED_SET_COLOR 140
+#define LED_SET_ANNIVERSARY 139
+#define LED_SET_BIRTHDAY 138
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,11 +79,17 @@ volatile uint16_t color = 0;
 volatile uint16_t brightness = 50;
 volatile DeviceState currentState = SLEEP;
 volatile int sensitivity = 10;
-char displayStr[128]; // Buffer for "00:00" plus null terminator
+char displayStr[128];
 bool userIsConfiguring = false;
 volatile uint32_t tick = 0;
 uint16_t refreshRate = 1000;
 bool stateChangeRequest = false;
+uint32_t lastTick = 0;
+uint32_t delayMs = 375;
+bool isOff = true;
+bool isSet = true;
+uint8_t selection = 0;
+uint8_t lastLED = 0xFF;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,14 +107,42 @@ int clampValue(int value, int minVal, int maxVal);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void Blink_LED(uint16_t LED, uint32_t color) {
+
+	if(LED != lastLED) {
+		Set_LED_Hex(lastLED, 0);
+		lastLED = LED;
+	}
+
+	if (HAL_GetTick() - lastTick >= delayMs) {
+
+		//Toggle LED
+		if(isOff){
+			Set_LED_Hex(LED, color);
+		} else {
+			Set_LED_Hex(LED, 0);
+		}
+
+		isOff = !isOff;
+		lastTick = HAL_GetTick();
+	}
+}
+
 void switchState(void) {
 
     //state-specific initialization
     switch(currentState) {
         case SLEEP:
-      	  counter = sTime.Hours * sensitivity;
-      	  userIsConfiguring = true;
+        	userIsConfiguring = true;
             break;
+        case WAKE:
+        	break;
+        case SELECT:
+        	selection = counter / sensitivity;
+        	break;
+        case ROUTE:
+        	counter = sTime.Hours * sensitivity;
+        	break;
         case SET_HOURS:
       	  counter = sTime.Minutes * sensitivity;
       	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
@@ -121,7 +163,7 @@ void switchState(void) {
             break;
     }
 
-      currentState = (currentState + 1) % 5; // There are 5 states
+      currentState = (currentState + 1) % 7; // There are 5 states
 
       __HAL_TIM_SET_COUNTER(&htim3, counter);
 
@@ -143,6 +185,9 @@ void checkButtonPress(void) {
     // Update the last button state.
     lastButtonState = currentButtonState;
 }
+
+
+
 
 /* USER CODE END 0 */
 
@@ -214,23 +259,53 @@ int main(void)
 		  stateChangeRequest = !stateChangeRequest;
 	  }
 
-
-
-
 	    if(userIsConfiguring)
-	  	  counter = __HAL_TIM_GET_COUNTER(&htim3); // Read encoder value directly
+	  	  counter = __HAL_TIM_GET_COUNTER(&htim3);
 
 
-			// Update the RTC structure with the current time
-			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
-
+		// get time and get date must both be called
+		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
 	    switch(currentState) {
 	        case SLEEP:
 	        	snprintf(displayStr, sizeof(displayStr), "%s", "      ");
 	            break;
+	        case WAKE:
+	        	counter = clampValue(counter, 0, 1);
+	        	Blink_LED(LED_SET + counter, getRainbowColor(color));
+	        	snprintf(displayStr, sizeof(displayStr), "%04u", LED_SET + counter);
+
+	        	//counter = 0 -> isSet
+	        	//counter = 1 -> isNotSet
+	        	isSet = !counter;
+
+	        	break;
+	        case SELECT:
+	        	counter = clampValue(counter, 0, 3 * sensitivity);
+	        	Set_LED_Hex(LED_SET + (!isSet), getRainbowColor(color));
+	        	Blink_LED(LED_SET_TIME - (counter/sensitivity), getRainbowColor(color));
+	        	break;
+	        case ROUTE:
+	        	switch(selection) {
+	        		case 0:
+	        			currentState = SET_HOURS;
+	        			break;
+	        		case 1:
+	        			currentState = SET_COLOR;
+	        			break;
+	        		case 2:
+
+	        			break;
+	        		case 3:
+
+	        			break;
+	        		default:
+						break;
+	        	}
+	        	break;
 	        case SET_HOURS:
+	        	Set_LED(136, 100, 100, 100);
 	        	counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
 	        	sTime.Hours = counter / sensitivity;
 	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
@@ -241,9 +316,10 @@ int main(void)
 	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
 	            break;
 	        case SET_COLOR:
-	        	counter = clampValue(counter, 0, 16 * sensitivity); //16 Color Presets
+	        	counter = clampValue(counter, 0, 16 * sensitivity); //16 color presets
 	        	color = counter / sensitivity;
 	        	snprintf(displayStr, sizeof(displayStr), "%04u", color);
+	        	Set_LED_Hex(136, getRainbowColor(color));
 	            break;
 	        case SET_BRIGHTNESS:
 	        	counter = clampValue(counter, 1, 100 * (sensitivity / 2)); //1-100% brightness
@@ -257,16 +333,15 @@ int main(void)
 		    Segment_Display(displayStr);
 	    }
 
-	    if(sTime.Hours >= 19) { //night time
+	    if(sTime.Hours >= 19) { //past 7pm
 	    	if(brightness > 70)
-	    		brightness = brightness * .70;
+	    		brightness = brightness * .70; //auto dim if brightness is high
 	    }
 
-
-			display_time(sTime.Hours, sTime.Minutes);
-		    display_bmp(color, brightness);
-			WS2812B_Send(&htim1);
-			clear_display_buffer();
+		display_time(sTime.Hours, sTime.Minutes);
+		display_bmp(color, brightness);
+		WS2812B_Send(&htim1);
+		clear_display_buffer();
 
 
 
