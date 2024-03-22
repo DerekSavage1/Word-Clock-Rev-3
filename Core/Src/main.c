@@ -39,11 +39,13 @@
       SLEEP,
 	  WAKE,
 	  SELECT,
-	  ROUTE,
       SET_HOURS,
 	  SET_MINUTES,
       SET_COLOR,
       SET_BRIGHTNESS,
+	  SET_MONTH,
+	  SET_DAY,
+	  SET_YEAR,
   } DeviceState;
 
 
@@ -88,7 +90,6 @@ uint32_t lastTick = 0;
 uint32_t delayMs = 375;
 bool isOff = true;
 bool isSet = true;
-uint8_t selection = 0;
 uint8_t lastLED = 0xFF;
 /* USER CODE END PV */
 
@@ -101,7 +102,6 @@ static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
-int clampValue(int value, int minVal, int maxVal);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -128,45 +128,81 @@ void Blink_LED(uint16_t LED, uint32_t color) {
 	}
 }
 
-void switchState(void) {
+uint16_t clampValue(uint16_t value, uint16_t minVal, uint16_t maxVal) {
+    if (abs(0xFFFF - value) < abs(maxVal - value)) {
+  	  return minVal;
+    } else {
+        // Normal range (does not wrap around)
+        if (value < minVal) return minVal;
+        if (value > maxVal) return maxVal;
+        return value;
+    }
+}
 
-    //state-specific initialization
+bool userSelectingFeature = true; // True when in SELECT state to decide what feature to adjust
+
+void switchState(void) {
     switch(currentState) {
         case SLEEP:
-        	userIsConfiguring = true;
+            currentState = WAKE;
             break;
         case WAKE:
-        	break;
+            currentState = SELECT;
+            break;
         case SELECT:
-        	selection = counter / sensitivity;
-        	break;
-        case ROUTE:
-        	counter = sTime.Hours * sensitivity;
-        	break;
+        	switch((counter / sensitivity)){
+        	case 2:
+        		counter = sTime.Hours * sensitivity;
+        		currentState = SET_HOURS;
+        		break;
+        	case 3:
+        		currentState = SET_COLOR;
+        		counter = color * sensitivity;
+        		break;
+        	}
+            break;
         case SET_HOURS:
-      	  counter = sTime.Minutes * sensitivity;
-      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+        	counter = sTime.Minutes * sensitivity;
+        	Set_LED_Hex(141, getRainbowColor(color));
+        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+            currentState = SET_MINUTES; // After setting hours, set minutes
             break;
         case SET_MINUTES:
-      	  counter = color * sensitivity;
-      	  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN); // or RTC_FORMAT_BCD depending on your setting
-      	  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN); // This line is required to unlock the shadow registers
+        	counter = sDate.Month * sensitivity;
+        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+            currentState = SET_MONTH; // Return to SLEEP after setting time
             break;
+        case SET_MONTH:
+        	counter = sDate.Date * sensitivity;
+        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	currentState = SET_DAY;
+        	break;
+        case SET_DAY:
+        	counter = sDate.Year * sensitivity;
+        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	currentState = SET_YEAR;
+        	break;
+        case SET_YEAR:
+        	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+        	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+        	currentState = SLEEP;
+        	break;
         case SET_COLOR:
-      	  counter = brightness * (sensitivity/2);
+        	counter = brightness * sensitivity;
+            currentState = SET_BRIGHTNESS; // After color, set brightness
             break;
         case SET_BRIGHTNESS:
-      	  counter = 0;
-      	  displayStr[0] = '\0';
-      	  userIsConfiguring = false;
+            currentState = SLEEP; // Return to SLEEP after setting LED features
+            break;
+        default:
+            // If state is somehow unhandled, default back to SLEEP as a failsafe
+            currentState = SLEEP;
             break;
     }
-
-      currentState = (currentState + 1) % 7; // There are 5 states
-
-      __HAL_TIM_SET_COUNTER(&htim3, counter);
-
 }
 
 void checkButtonPress(void) {
@@ -188,6 +224,73 @@ void checkButtonPress(void) {
 
 
 
+
+void SetHours() {
+    Set_LED(136, 100, 100, 100);
+    counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
+    sTime.Hours = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
+}
+
+void SetMinutes() {
+    counter = clampValue(counter, 0, 59 * sensitivity); //59 minutes
+    sTime.Minutes = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
+}
+
+int SetMonth() {
+    counter = clampValue(counter, 0, 12 * sensitivity); //12 months
+    sDate.Month = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u%02u", sDate.Month, sDate.Date);
+    return counter / sensitivity;
+}
+
+int SetDay() {
+    counter = clampValue(counter, 0, 31 * sensitivity); //31 days
+    //FIXME: user could enter February 31 which is wrong
+    sDate.Date = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%02u%02u", sDate.Month, sDate.Date);
+    return counter / sensitivity;
+}
+
+int SetYear() {
+    counter = clampValue(counter, 0, 3000 * sensitivity); //12 months
+    sDate.Year = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%04u", sDate.Year);
+    return counter / sensitivity;
+}
+
+void SetColor() {
+    counter = clampValue(counter, 0, 16 * sensitivity); //16 color presets
+    color = counter / sensitivity;
+    snprintf(displayStr, sizeof(displayStr), "%04u", color);
+    Set_LED_Hex(136, getRainbowColor(color));
+    Set_LED_Hex(140, getRainbowColor(color));
+}
+
+
+void SetBrightness() {
+    counter = clampValue(counter, 1, 100 * (sensitivity / 2)); //1-100% brightness
+    brightness = counter / (sensitivity / 2);
+    snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
+}
+
+void Select() {
+	counter = clampValue(counter, 0, 3 * sensitivity);
+	Set_LED_Hex(LED_SET + (!isSet), getRainbowColor(color));
+	Blink_LED(LED_SET_TIME - (counter/sensitivity), getRainbowColor(color));
+	snprintf(displayStr, sizeof(displayStr), "%04u", counter/sensitivity);
+}
+
+void Wake() {
+	counter = clampValue(counter, 0, 1);
+	Blink_LED(LED_SET + counter, getRainbowColor(color));
+	snprintf(displayStr, sizeof(displayStr), "%04u", LED_SET + counter);
+
+	//counter = 0 -> isSet
+	//counter = 1 -> isNotSet
+	isSet = !counter;
+}
 
 /* USER CODE END 0 */
 
@@ -227,19 +330,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
-  uint16_t clampValue(uint16_t value, uint16_t minVal, uint16_t maxVal) {
-      if (abs(0xFFFF - value) < abs(maxVal - value)) {
-    	  return minVal;
-      } else {
-          // Normal range (does not wrap around)
-          if (value < minVal) return minVal;
-          if (value > maxVal) return maxVal;
-          return value;
-      }
-  }
-
-
-
 
   /* USER CODE END 2 */
 
@@ -253,95 +343,61 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	  counter = __HAL_TIM_GET_COUNTER(&htim3);
+
 	  checkButtonPress();
 	  if(stateChangeRequest){
 		  switchState();
 		  stateChangeRequest = !stateChangeRequest;
 	  }
 
-	    if(userIsConfiguring)
-	  	  counter = __HAL_TIM_GET_COUNTER(&htim3);
+	// get time and get date must both be called
+	HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
 
-		// get time and get date must both be called
-		HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+	switch(currentState) {
+		case SLEEP:
+			snprintf(displayStr, sizeof(displayStr), "%s", "\0");
+			break;
+		case WAKE:
+			Wake();
+			break;
+		case SELECT:
+			Select();
+			break;
+		case SET_HOURS:
+			SetHours();
+			break;
+		case SET_MINUTES:
+			SetMinutes();
+			break;
+		case SET_MONTH:
+			SetMonth();
+			break;
+		case SET_DAY:
+			SetDay();
+			break;
+		case SET_YEAR:
+			SetYear();
+			break;
+		case SET_COLOR:
+			SetColor();
+			break;
+		case SET_BRIGHTNESS:
+			SetBrightness();
+			break;
+	}
 
-	    switch(currentState) {
-	        case SLEEP:
-	        	snprintf(displayStr, sizeof(displayStr), "%s", "      ");
-	            break;
-	        case WAKE:
-	        	counter = clampValue(counter, 0, 1);
-	        	Blink_LED(LED_SET + counter, getRainbowColor(color));
-	        	snprintf(displayStr, sizeof(displayStr), "%04u", LED_SET + counter);
 
-	        	//counter = 0 -> isSet
-	        	//counter = 1 -> isNotSet
-	        	isSet = !counter;
 
-	        	break;
-	        case SELECT:
-	        	counter = clampValue(counter, 0, 3 * sensitivity);
-	        	Set_LED_Hex(LED_SET + (!isSet), getRainbowColor(color));
-	        	Blink_LED(LED_SET_TIME - (counter/sensitivity), getRainbowColor(color));
-	        	break;
-	        case ROUTE:
-	        	switch(selection) {
-	        		case 0:
-	        			currentState = SET_HOURS;
-	        			break;
-	        		case 1:
-	        			currentState = SET_COLOR;
-	        			break;
-	        		case 2:
+	__HAL_TIM_SET_COUNTER(&htim3, counter);
+	Segment_Display(displayStr);
 
-	        			break;
-	        		case 3:
-
-	        			break;
-	        		default:
-						break;
-	        	}
-	        	break;
-	        case SET_HOURS:
-	        	Set_LED(136, 100, 100, 100);
-	        	counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
-	        	sTime.Hours = counter / sensitivity;
-	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
-	            break;
-	        case SET_MINUTES:
-	        	counter = clampValue(counter, 0, 59 * sensitivity); //59 Minutes
-	        	sTime.Minutes = counter / sensitivity;
-	        	snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
-	            break;
-	        case SET_COLOR:
-	        	counter = clampValue(counter, 0, 16 * sensitivity); //16 color presets
-	        	color = counter / sensitivity;
-	        	snprintf(displayStr, sizeof(displayStr), "%04u", color);
-	        	Set_LED_Hex(136, getRainbowColor(color));
-	            break;
-	        case SET_BRIGHTNESS:
-	        	counter = clampValue(counter, 1, 100 * (sensitivity / 2)); //1-100% brightness
-	        	brightness = counter / (sensitivity / 2);
-	        	snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
-	            break;
-	    }
-
-	    if(userIsConfiguring) {
-		    __HAL_TIM_SET_COUNTER(&htim3, counter);
-		    Segment_Display(displayStr);
-	    }
-
-	    if(sTime.Hours >= 19) { //past 7pm
-	    	if(brightness > 70)
-	    		brightness = brightness * .70; //auto dim if brightness is high
-	    }
-
-		display_time(sTime.Hours, sTime.Minutes);
-		display_bmp(color, brightness);
-		WS2812B_Send(&htim1);
-		clear_display_buffer();
+	display_time(sTime.Hours, sTime.Minutes);
+	display_bmp(color, brightness);
+	WS2812B_Send(&htim1);
+	clear_display_buffer();
 
 
 
