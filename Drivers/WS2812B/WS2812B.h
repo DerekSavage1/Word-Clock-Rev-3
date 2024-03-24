@@ -18,6 +18,6 @@
 
 void Set_LED(int, int, int, int);
 void Set_LED_Hex(int, uint32_t);
-void WS2812B_Send(TIM_HandleTypeDef *htim);
+void WS2812B_Send();
 
 #endif /* WS2812B_WS2812B_H_ */

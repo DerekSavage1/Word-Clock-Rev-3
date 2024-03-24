@@ -30,10 +30,11 @@ void Set_LED_Hex(int LEDnum, uint32_t color) {
     }
 }
 
+extern TIM_HandleTypeDef htim1;
 
 uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
-void WS2812B_Send(TIM_HandleTypeDef *htim) { // Changed to pointer to match typical HAL use.
+void WS2812B_Send() { // Changed to pointer to match typical HAL use.
     uint32_t indx = 0;
     uint32_t data;
 
@@ -56,23 +57,19 @@ void WS2812B_Send(TIM_HandleTypeDef *htim) { // Changed to pointer to match typi
         pwmData[indx++] = 0;
     }
 
-    // Ensure we don't exceed the buffer size, which should never happen by design, but it's good to check.
-    if(indx <= sizeof(pwmData)/sizeof(pwmData[0])) {
-    	if((pwmData == NULL) && (indx > 0U))
-    		return;
 
-        HAL_TIM_PWM_Start_DMA(htim, TIM_CHANNEL_1, (uint32_t*)pwmData, indx);
-        while (!datasentflag) {}
-        datasentflag = 0;
-    }
+    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint16_t*)pwmData, indx);
+	while (!datasentflag) {}
+	datasentflag = 0;
+
 
 }
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
-
-    // Properly stop the PWM output after the transmission is complete
-    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-
-    // Set the flag indicating that the data has been sent
-    datasentflag = 1;
-}
+//void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+//
+//    // Properly stop the PWM output after the transmission is complete
+//    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
+//
+//    // Set the flag indicating that the data has been sent
+//    datasentflag = 1;
+//}

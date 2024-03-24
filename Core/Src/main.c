@@ -323,6 +323,18 @@ void Wake() {
 	isSet = !counter;
 }
 
+volatile int hi = 0;
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+
+    // Properly stop the PWM output after the transmission is complete
+    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
+
+    // Set the flag indicating that the data has been sent
+    hi = 1;
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -332,8 +344,7 @@ void Wake() {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-
+  SCB->VTOR = FLASH_BASE | 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -389,7 +400,7 @@ int main(void)
 
 	switch(currentState) {
 		case SLEEP:
-			snprintf(displayStr, sizeof(displayStr), "%s", "\0");
+			snprintf(displayStr, sizeof(displayStr), "%s", "0000");
 			break;
 		case WAKE:
 			Wake();
@@ -425,13 +436,11 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
+
 	display_time(sTime.Hours, sTime.Minutes);
 	display_bmp(color, brightness);
-	WS2812B_Send(&htim1);
+	WS2812B_Send();
 	clear_display_buffer();
-
-
-
 
   }
   /* USER CODE END 3 */
@@ -454,10 +463,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
@@ -559,7 +568,6 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
@@ -574,15 +582,6 @@ static void MX_TIM1_Init(void)
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
