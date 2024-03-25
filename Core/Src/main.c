@@ -74,7 +74,7 @@ TIM_HandleTypeDef htim3;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
-volatile uint16_t counter = 0;
+volatile uint32_t counter = 0;
 RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
 volatile uint16_t color = 0;
@@ -358,7 +358,7 @@ int main(void)
 
 	switch(currentState) {
 		case SLEEP:
-			snprintf(displayStr, sizeof(displayStr), "%s", "\0");
+			snprintf(displayStr, 4, "%s", "\0");
 			break;
 		case WAKE:
 			Wake();
@@ -394,10 +394,10 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
-	display_time(sTime.Hours, sTime.Minutes);
-	display_bmp(color, brightness);
-	WS2812B_Send(&htim1);
-	clear_display_buffer();
+//	display_time(sTime.Hours, sTime.Minutes);
+//	display_bmp(color, brightness);
+//	WS2812B_Send(&htim1);
+//	clear_display_buffer();
 
 
 
