@@ -9,26 +9,9 @@
 
 char outputBuffer[CHAR_TO_DISPLAY_MAX] = {0};
 
-// Segment definitions for numbers and some characters in hexadecimal
-const uint8_t charToSegmentsMap[] = {
-		['0'] = 0x3F, ['1'] = 0x06, ['2'] = 0x5B, ['3'] = 0x4F,
-		['4'] = 0x66, ['5'] = 0x6D, ['6'] = 0x7D, ['7'] = 0x07,
-		['8'] = 0x7F, ['9'] = 0x6F, ['A'] = 0x77, ['B'] = 0x7C,
-		['C'] = 0x39, ['D'] = 0x5E, ['E'] = 0x79, ['F'] = 0x71,
-		['G'] = 0x3D, ['H'] = 0x76, ['I'] = 0x30, ['J'] = 0x1E,
-		['K'] = 0x76, // Using same as 'H', no unique representation for 'K'
-		['L'] = 0x38, ['M'] = 0x37, // 'M' uses same as 'n', no unique representation
-		['N'] = 0x54, ['O'] = 0x3F, ['P'] = 0x73, ['Q'] = 0x67,
-		['R'] = 0x50, ['S'] = 0x6D, ['T'] = 0x78, ['U'] = 0x3E,
-		['V'] = 0x3E, // Using same as 'U', no unique representation for 'V'
-		['W'] = 0x2A, // Representation of 'W' is not possible, so using compromise
-		['X'] = 0x76, // Using same as 'H', no unique representation for 'X'
-		['Y'] = 0x6E, ['Z'] = 0x5B,  // 'Z' uses same as '2'
-		[' '] = 0x00, // Blank character
-};
 
 // Set the segments for the current digit
-void setSegments(uint8_t segments) {
+void setSegments(int segments) {
   HAL_GPIO_WritePin(GPIOA, SEG_A_K_Pin, (segments & (1 << 0)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, SEG_B_K_Pin, (segments & (1 << 1)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, SEG_C_K_Pin, (segments & (1 << 2)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
@@ -40,7 +23,8 @@ void setSegments(uint8_t segments) {
 }
 
 // Activate a single digit
-void activateDigit(uint8_t digit) {
+void activateDigit(int digit) {
+
   HAL_GPIO_WritePin(GPIOB, DIG_1_A_Pin, digit == 1 ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOB, DIG_2_A_Pin, digit == 2 ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOA, DIG_3_A_Pin, digit == 3 ? GPIO_PIN_SET : GPIO_PIN_RESET);
@@ -48,55 +32,171 @@ void activateDigit(uint8_t digit) {
   HAL_GPIO_WritePin(GPIOB, DEC_A_Pin,   digit == 5 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-// Prevent errors by formatting string
-void processInput(const char *input) {
-    size_t inputLength = strlen(input);
-
-    // We are assuming that outputBuffer is large enough to hold all digits
-    memset(outputBuffer, 0, sizeof(outputBuffer)); // Clear the output buffer
-
-    for (size_t i = 0, j = 0; i < inputLength && j < NUM_DIGITS; ++i) {
-        // Convert lowercase letters to uppercase
-        uint8_t c = (uint8_t)toupper((unsigned char)input[i]); // Cast to avoid potential negative values
-
-        if (c == ':') {
-            // If colon, handle separately
-            continue;
-        }
-        if (c < ' ' || c > 'Z' || charToSegmentsMap[c] == 0) {
-            // Replace invalid character with 'E'
-            outputBuffer[j++] = 'E';
-        } else {
-            // Copy valid character to output buffer
-            outputBuffer[j++] = c; // Now 'c' contains the uppercase version, if applicable
-        }
-    }
-
-    // Null-termination is ensured by static buffer initialization to {0}
-}
-
 // Display up to four characters on the 7-segment displays
 void Segment_Display(const char *input) {
-    processInput(input);
-    bool hasColon = strchr(input, ':') != NULL; // Check if input contains a colon
-
-    // Clearing all digits can be optimized out if carefully controlling the display digits
-    // activateDigit(0); // Assuming the digits are off to begin with
-
     // Calculate the number of characters to display
-    size_t numChars = strlen(outputBuffer);
-    for (size_t i = 0; i < numChars; i++) {
-        activateDigit(i + 1); // Activate the correct digit
-        setSegments(charToSegmentsMap[(uint8_t)outputBuffer[i]]); // Set segments
-        HAL_Delay(1); // Delay to allow the segments to light up
-    }
 
-    if (hasColon) {
-        // Handle case for the colon display
-        activateDigit(5); // Assuming the fifth "digit" is for the colon
-        setSegments(0b11); // Set segments to display the colon
-        HAL_Delay(1);
-    }
+    for(int i = 0; i < 4; i++) {
+        activateDigit(i + 1);
 
-    activateDigit(0); // Turn off all digits after showing the sequence
+        if(strlen(input) < i) {
+        	break;
+        }
+
+
+		char ch = input[i];
+        switch(ch) {
+            case '0':
+                setSegments(0x3F);
+                break;
+            case '1':
+                setSegments(0x06);
+                break;
+            case '2':
+                setSegments(0x5B);
+                break;
+            case '3':
+                setSegments(0x4F);
+                break;
+            case '4':
+                setSegments(0x66);
+                break;
+            case '5':
+                setSegments(0x6D);
+                break;
+            case '6':
+                setSegments(0x7D);
+                break;
+            case '7':
+                setSegments(0x07);
+                break;
+            case '8':
+                setSegments(0x7F);
+                break;
+            case '9':
+                setSegments(0x6F);
+                break;
+            case 'a':
+            case 'A':
+                setSegments(0x77);
+                break;
+            case 'b':
+            case 'B':
+                setSegments(0x7C);
+                break;
+            case 'c':
+            case 'C':
+                setSegments(0x39);
+                break;
+            case 'd':
+            case 'D':
+                setSegments(0x5E);
+                break;
+            case 'e':
+            case 'E':
+                setSegments(0x79);
+                break;
+            case 'f':
+            case 'F':
+                setSegments(0x71);
+                break;
+            case 'g':
+            case 'G':
+                setSegments(0x3D);
+                break;
+            case 'h':
+            case 'H':
+                setSegments(0x76);
+                break;
+            case 'i':
+            case 'I':
+                setSegments(0x30);
+                break;
+            case 'j':
+            case 'J':
+                setSegments(0x1E);
+                break;
+            case 'k':
+            case 'K':
+                // Using same as 'H', no unique representation for 'K'
+                setSegments(0x76);
+                break;
+            case 'l':
+            case 'L':
+                setSegments(0x38);
+                break;
+            case 'm':
+            case 'M':
+                // 'M' uses same as 'n', no unique representation
+                setSegments(0x37);
+                break;
+            case 'n':
+            case 'N':
+                setSegments(0x54);
+                break;
+            case 'o':
+            case 'O':
+                setSegments(0x3F);
+                break;
+            case 'p':
+            case 'P':
+                setSegments(0x73);
+                break;
+            case 'q':
+            case 'Q':
+                setSegments(0x67);
+                break;
+            case 'r':
+            case 'R':
+                setSegments(0x50);
+                break;
+            case 's':
+            case 'S':
+                setSegments(0x6D);
+                break;
+            case 't':
+            case 'T':
+                setSegments(0x78);
+                break;
+            case 'u':
+            case 'U':
+                setSegments(0x3E);
+                break;
+            case 'v':
+            case 'V':
+                // Using same as 'U', no unique representation for 'V'
+                setSegments(0x3E);
+                break;
+            case 'w':
+            case 'W':
+                // Representation of 'W' is not possible, so using compromise
+                setSegments(0x2A);
+                break;
+            case 'x':
+            case 'X':
+                // Using same as 'H', no unique representation for 'X'
+                setSegments(0x76);
+                break;
+            case 'y':
+            case 'Y':
+                setSegments(0x6E);
+                break;
+            case 'z':
+            case 'Z':
+                // 'Z' uses same as '2'
+                setSegments(0x5B);
+                break;
+            case ' ':
+                // Blank character
+                setSegments(0x00);
+                break;
+            case '-':
+            	setSegments(0b000100000);
+            	break;
+            default:
+            	setSegments(0x00);
+                break;
+        }
+        HAL_Delay(5);
+    }
 }

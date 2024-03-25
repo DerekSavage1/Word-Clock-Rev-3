@@ -20,10 +20,9 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 extern char outputBuffer[CHAR_TO_DISPLAY_MAX];
-extern const uint8_t charToSegmentsMap[];
 
-void setSegments(uint8_t segments);
-void activateDigit(uint8_t digit);
+void setSegments(int segments);
+void activateDigit(int digit);
 void processInput(const char *input);
 void Segment_Display(const char *input);
 

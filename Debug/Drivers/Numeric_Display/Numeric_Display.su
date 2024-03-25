@@ -1,4 +1,3 @@
-../Drivers/Numeric_Display/Numeric_Display.c:31:6:setSegments	16	static
-../Drivers/Numeric_Display/Numeric_Display.c:43:6:activateDigit	16	static
-../Drivers/Numeric_Display/Numeric_Display.c:52:6:processInput	32	static
-../Drivers/Numeric_Display/Numeric_Display.c:79:6:Segment_Display	32	static
+../Drivers/Numeric_Display/Numeric_Display.c:14:6:setSegments	16	static
+../Drivers/Numeric_Display/Numeric_Display.c:26:6:activateDigit	16	static
+../Drivers/Numeric_Display/Numeric_Display.c:36:6:Segment_Display	24	static
