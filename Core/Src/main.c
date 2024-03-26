@@ -118,6 +118,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 void Blink_LED(uint16_t LED, uint32_t color) {
 
+
 	if(LED != lastLED) {
 		Set_LED_Hex(lastLED, 0);
 		lastLED = LED;
@@ -323,18 +324,6 @@ void Wake() {
 	isSet = !counter;
 }
 
-volatile int hi = 0;
-
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
-
-    // Properly stop the PWM output after the transmission is complete
-    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-
-    // Set the flag indicating that the data has been sent
-    hi = 1;
-
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -400,7 +389,7 @@ int main(void)
 
 	switch(currentState) {
 		case SLEEP:
-			snprintf(displayStr, 4, "%s", "\0");
+			snprintf(displayStr, 4, "%04u", counter);
 			break;
 		case WAKE:
 			Wake();

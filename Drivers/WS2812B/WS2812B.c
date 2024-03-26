@@ -12,6 +12,7 @@ volatile int datasentflag;
 
 
 void Set_LED(int LEDnum, int Red, int Green, int Blue) {
+	while(!datasentflag){}
     if(LEDnum >= 0 && LEDnum < NUM_LEDS) {
         LED_Data[LEDnum][0] = Green;
         LED_Data[LEDnum][1] = Red;
@@ -20,6 +21,7 @@ void Set_LED(int LEDnum, int Red, int Green, int Blue) {
 }
 
 void Set_LED_Hex(int LEDnum, uint32_t color) {
+	while(!datasentflag){}
     if(LEDnum >= 0 && LEDnum < NUM_LEDS) {
         uint8_t Red = (color >> 16) & 0xFF;
         uint8_t Green = (color >> 8) & 0xFF;
@@ -35,6 +37,7 @@ extern TIM_HandleTypeDef htim1;
 uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
 void WS2812B_Send() { // Changed to pointer to match typical HAL use.
+	while(!datasentflag){}
     uint32_t indx = 0;
     uint32_t data;
 
@@ -57,19 +60,17 @@ void WS2812B_Send() { // Changed to pointer to match typical HAL use.
         pwmData[indx++] = 0;
     }
 
-
     HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint16_t*)pwmData, indx);
 	while (!datasentflag) {}
 	datasentflag = 0;
 
-
 }
 
-//void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
-//
-//    // Properly stop the PWM output after the transmission is complete
-//    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-//
-//    // Set the flag indicating that the data has been sent
-//    datasentflag = 1;
-//}
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+
+    // Properly stop the PWM output after the transmission is complete
+    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
+
+    // Set the flag indicating that the data has been sent
+    datasentflag = 1;
+}
