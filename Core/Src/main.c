@@ -85,10 +85,10 @@ RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
 RTC_DateTypeDef aDate;
 RTC_DateTypeDef bDate;
-volatile uint16_t color = 0;
-volatile uint16_t brightness = 50;
+volatile uint8_t color = 0;
+volatile uint8_t brightness = 50;
 volatile DeviceState currentState = SLEEP;
-volatile int sensitivity = 10;
+volatile uint32_t sensitivity = 10;
 char displayStr[128];
 bool userIsConfiguring = false;
 volatile uint32_t tick = 0;
@@ -116,7 +116,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void Blink_LED(uint16_t LED, uint32_t color) {
+void Blink_LED(uint8_t LED, uint32_t color) {
 
 
 	if(LED != lastLED) {
@@ -138,8 +138,8 @@ void Blink_LED(uint16_t LED, uint32_t color) {
 	}
 }
 
-uint16_t clampValue(uint16_t value, uint16_t minVal, uint16_t maxVal) {
-    if (abs(0xFFFF - value) < abs(maxVal - value)) {
+uint32_t clampValue(uint32_t value, uint32_t minVal, uint32_t maxVal) {
+    if ((0xFFFF - value) < (maxVal - value)) {
   	  return minVal;
     } else {
         // Normal range (does not wrap around)
@@ -161,7 +161,7 @@ void switchState(RTC_DateTypeDef * tDate) {
 
             break;
         case SELECT:
-        	switch((counter / sensitivity)){
+        	switch(counter / sensitivity){
         	case 0:
         		counter = sTime.Hours * sensitivity;
         		currentState = SET_HOURS;
@@ -179,6 +179,8 @@ void switchState(RTC_DateTypeDef * tDate) {
         		currentDateType = BIRTHDAY_DATE;
             	counter = bDate.Month * sensitivity;
             	currentState = SET_MONTH;
+        		break;
+        	default:
         		break;
         	}
             break;
@@ -260,42 +262,42 @@ void checkButtonPress(void) {
 void SetHours() {
     Set_LED(136, 100, 100, 100);
     counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
-    sTime.Hours = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
+    sTime.Hours = (uint8_t) (counter / sensitivity);
+
 }
 
 void SetMinutes() {
     counter = clampValue(counter, 0, 59 * sensitivity); //59 minutes
-    sTime.Minutes = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u:%02u", sTime.Hours, sTime.Minutes);
+    sTime.Minutes = (uint8_t) (counter / sensitivity);
+
 }
 
-int SetMonth(RTC_DateTypeDef * tDate) {
+uint8_t SetMonth(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 12 * sensitivity); //12 months
-    tDate->Month = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u%02u", tDate->Month, tDate->Date);
-    return counter / sensitivity;
+    tDate->Month = (uint8_t) (counter / sensitivity);
+
+    return (uint8_t) (counter / sensitivity);
 }
 
-int SetDay(RTC_DateTypeDef * tDate) {
+uint8_t SetDay(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 31 * sensitivity); //31 days
     //FIXME: user could enter February 31 which is wrong
-    tDate->Date = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%02u%02u", tDate->Month, tDate->Date);
-    return counter / sensitivity;
+    tDate->Date = (uint8_t) (counter / sensitivity);
+
+    return (uint8_t) (counter / sensitivity);
 }
 
-int SetYear(RTC_DateTypeDef * tDate) {
+uint8_t SetYear(RTC_DateTypeDef * tDate) {
     counter = clampValue(counter, 0, 3000 * sensitivity); //12 months
-    tDate->Year = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%04u", tDate->Year);
-    return counter / sensitivity;
+    tDate->Year = (uint8_t) (counter / sensitivity);
+
+    return (uint8_t) (counter / sensitivity);
 }
 
 void SetColor() {
     counter = clampValue(counter, 0, 16 * sensitivity); //16 color presets
-    color = counter / sensitivity;
-    snprintf(displayStr, sizeof(displayStr), "%04u", color);
+    color = (uint8_t) (counter / sensitivity);
+
     Set_LED_Hex(136, getRainbowColor(color));
     Set_LED_Hex(140, getRainbowColor(color));
 }
@@ -303,22 +305,17 @@ void SetColor() {
 
 void SetBrightness() {
     counter = clampValue(counter, 1, 100 * (sensitivity / 2)); //1-100% brightness
-    brightness = counter / (sensitivity / 2);
-    snprintf(displayStr, sizeof(displayStr), "%04u", brightness);
+    brightness = (uint8_t) (counter / (sensitivity / 2));
+
 }
 
 void Select() {
 	counter = clampValue(counter, 0, 3 * sensitivity);
 	Set_LED_Hex(LED_SET + (!isSet), getRainbowColor(color));
-	Blink_LED(LED_SET_TIME - (counter/sensitivity), getRainbowColor(color));
-	snprintf(displayStr, sizeof(displayStr), "%04u", counter/sensitivity);
 }
 
 void Wake() {
 	counter = clampValue(counter, 0, 1);
-	Blink_LED(LED_SET + counter, getRainbowColor(color));
-	snprintf(displayStr, sizeof(displayStr), "%04u", LED_SET + counter);
-
 	//counter = 0 -> isSet
 	//counter = 1 -> isNotSet
 	isSet = !counter;
@@ -332,8 +329,8 @@ void Wake() {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
-  SCB->VTOR = FLASH_BASE | 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -389,7 +386,7 @@ int main(void)
 
 	switch(currentState) {
 		case SLEEP:
-			snprintf(displayStr, 4, "%04u", counter);
+
 			break;
 		case WAKE:
 			Wake();
@@ -425,10 +422,10 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
-//	display_time(sTime.Hours, sTime.Minutes);
-//	display_bmp(color, brightness);
-//	WS2812B_Send(&htim1);
-//	clear_display_buffer();
+	display_time(sTime.Hours, sTime.Minutes);
+	display_bmp(color, brightness);
+	WS2812B_Send(&htim1);
+	clear_display_buffer();
 
   }
   /* USER CODE END 3 */
@@ -682,6 +679,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -724,6 +723,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */

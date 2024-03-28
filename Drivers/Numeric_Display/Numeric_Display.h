@@ -21,8 +21,8 @@
 
 extern char outputBuffer[CHAR_TO_DISPLAY_MAX];
 
-void setSegments(int segments);
-void activateDigit(int digit);
+void setSegments(uint8_t segments);
+void activateDigit(uint8_t digit);
 void processInput(const char *input);
 void Segment_Display(const char *input);
 

@@ -11,7 +11,7 @@ char outputBuffer[CHAR_TO_DISPLAY_MAX] = {0};
 
 
 // Set the segments for the current digit
-void setSegments(int segments) {
+void setSegments(uint8_t segments) {
   HAL_GPIO_WritePin(GPIOA, SEG_A_K_Pin, (segments & (1 << 0)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, SEG_B_K_Pin, (segments & (1 << 1)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, SEG_C_K_Pin, (segments & (1 << 2)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
@@ -23,7 +23,7 @@ void setSegments(int segments) {
 }
 
 // Activate a single digit
-void activateDigit(int digit) {
+void activateDigit(uint8_t digit) {
 
   HAL_GPIO_WritePin(GPIOB, DIG_1_A_Pin, digit == 1 ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOB, DIG_2_A_Pin, digit == 2 ? GPIO_PIN_SET : GPIO_PIN_RESET);
@@ -34,18 +34,19 @@ void activateDigit(int digit) {
 
 // Display up to four characters on the 7-segment displays
 void Segment_Display(const char *input) {
-    // Calculate the number of characters to display
 
-    for(int i = 0; i < 4; i++) {
+    // Truncate the input to 4 characters
+    char truncatedInput[5];
+    strncpy(truncatedInput, input, 4);
+    truncatedInput[4] = '\0';
+
+    for(uint8_t i = 0; i < 4; i++) {
         activateDigit(i + 1);
 
-        if(strlen(input) < i) {
-        	break;
-        }
-
-
-		char ch = input[i];
+		char ch = truncatedInput[i];
         switch(ch) {
+        	case '\0':
+        		return;
             case '0':
                 setSegments(0x3F);
                 break;
@@ -191,7 +192,7 @@ void Segment_Display(const char *input) {
                 setSegments(0x00);
                 break;
             case '-':
-            	setSegments(0b000100000);
+            	setSegments(0x04);
             	break;
             default:
             	setSegments(0x00);

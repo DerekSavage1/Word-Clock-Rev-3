@@ -89,7 +89,7 @@ void add_bmp(const uint16_t bmp[12]) {
     }
 }
 
-void display_bmp(uint16_t preset, uint16_t brightness) {
+void display_bmp(uint8_t preset, uint8_t brightness) {
     if (brightness < 1 || brightness > 100) {
         // Ensure the brightness index is within the valid range to avoid out-of-bounds access
         return;
@@ -111,14 +111,14 @@ void display_bmp(uint16_t preset, uint16_t brightness) {
     green = (uint8_t)(((uint32_t)green * brightnessValue) / 1023);
     blue = (uint8_t)(((uint32_t)blue * brightnessValue) / 1023);
 
-    for (int row = 0; row < 12; row++) {
-        for (int col = 0; col < 11; col++) {
+    for (uint8_t row = 0; row < 12; row++) {
+        for (uint8_t col = 0; col < 11; col++) {
             if (displayBuffer[row][col] & 1) { // Check if the bit is set
                 // Set the LED to the adjusted color for specified brightness
-                Set_LED((row * 11) + col, red, green, blue);
+                Set_LED((uint8_t) ((row * 11) + col), red, green, blue);
             } else {
                 // Turn the LED off
-                Set_LED((row * 11) + col, 0, 0, 0);
+                Set_LED((uint8_t) ((row * 11) + col), 0, 0, 0);
             }
         }
     }

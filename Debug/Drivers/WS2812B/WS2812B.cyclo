@@ -1,4 +1,4 @@
-../Drivers/WS2812B/WS2812B.c:14:6:Set_LED	4
-../Drivers/WS2812B/WS2812B.c:23:6:Set_LED_Hex	4
-../Drivers/WS2812B/WS2812B.c:39:6:WS2812B_Send	7
+../Drivers/WS2812B/WS2812B.c:14:6:Set_LED	2
+../Drivers/WS2812B/WS2812B.c:23:6:Set_LED_Hex	2
+../Drivers/WS2812B/WS2812B.c:39:6:WS2812B_Send	6
 ../Drivers/WS2812B/WS2812B.c:69:6:HAL_TIM_PWM_PulseFinishedCallback	1
