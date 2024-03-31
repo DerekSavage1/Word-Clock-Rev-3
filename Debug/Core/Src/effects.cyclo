@@ -10,4 +10,7 @@
 ../Core/Src/effects.c:172:9:getLitFromNextFrame	5
 ../Core/Src/effects.c:186:6:flickerOutEffect	6
 ../Core/Src/effects.c:223:6:flickerInEffect	5
-../Core/Src/effects.c:260:6:display_time	20
+../Core/Src/effects.c:261:6:setAnniversary	1
+../Core/Src/effects.c:280:6:display_time	20
+../Core/Src/effects.c:363:10:HsvToRgb	7
+../Core/Src/effects.c:408:10:RgbToHsv	7

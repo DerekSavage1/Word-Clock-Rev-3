@@ -117,28 +117,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void Blink_LED(uint8_t LED, uint32_t color) {
-
-
-	if(LED != lastLED) {
-		Set_LED_Hex(lastLED, 0);
-		lastLED = LED;
-	}
-
-	if (HAL_GetTick() - lastTick >= delayMs) {
-
-		//Toggle LED
-		if(isOff){
-			Set_LED_Hex(LED, color);
-		} else {
-			Set_LED_Hex(LED, 0);
-		}
-
-		isOff = !isOff;
-		lastTick = HAL_GetTick();
-	}
-}
-
 uint32_t clampValue(uint32_t value, uint32_t minVal, uint32_t maxVal) {
     if ((0xFFFF - value) < (maxVal - value)) {
   	  return minVal;
@@ -362,6 +340,7 @@ int main(void)
   HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
   display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
+  advanceFrame();
   flickerInEffect();
 
   /* USER CODE END 2 */
@@ -424,14 +403,17 @@ int main(void)
 			break;
 	}
 
+	 snprintf(displayStr, sizeof(displayStr), "%02d:%02d", sTime.Hours, sTime.Minutes);
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
+	setAnniversary(5);
+
 	if((sTime.Minutes % 5 == 0 && sTime.Minutes != previousMinutes)) {
 		flickerOutEffect();
-		advanceFrame();
 
 		display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
+		advanceFrame();
 
 		flickerInEffect();
 		previousMinutes = sTime.Minutes;
@@ -439,8 +421,7 @@ int main(void)
 
 
 
-	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
 
 
   }
@@ -532,9 +513,9 @@ static void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
-  sTime.Hours = 0x2;
-  sTime.Minutes = 0x0;
-  sTime.Seconds = 0x0;
+  sTime.Hours = 0x3;
+  sTime.Minutes = 0x59;
+  sTime.Seconds = 0x30;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
   if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)

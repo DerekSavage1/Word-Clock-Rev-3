@@ -13,6 +13,9 @@ uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
 static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
 
+void setLED() {
+
+}
 
 /**
  * @brief   Turns on an LED by setting its 'draw' flag to false.
@@ -44,8 +47,6 @@ void wipePWMBuffer(void) {
         pwmBuffer[i] = ZERO;
     }
 }
-
-
 
 /**
  * @brief   Updates the PWM buffer based on the LED data.
@@ -96,7 +97,6 @@ void updatePwmBuffer(LED *currentFrame) {
 
 void DMA_Send() {
 
-	//FIXME: The data is 1 bit too far to the left.
     HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmBuffer, PWM_ARRAY_SIZE + 1);
 	while (!datasentflag) {}
 	datasentflag = 0;

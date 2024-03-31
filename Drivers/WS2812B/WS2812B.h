@@ -28,13 +28,10 @@ typedef struct {
 
 #define PWM_ARRAY_SIZE (MATRIX_SIZE * 24 + RESET_SLOTS)
 
-void Set_LED(uint8_t, uint8_t, uint8_t, uint8_t);
-void Set_LED_Hex(uint8_t, uint32_t);
-void DMA_Send();
+void DMA_Send(void);
+void wipePWMBuffer(void);
 void updatePwmBuffer(LED *currentFrame);
 void turnOffLED(LED *currentFrame, uint8_t number);
 void turnOnLED(LED *currentFrame, uint8_t number);
-
-
 
 #endif /* WS2812B_WS2812B_H_ */

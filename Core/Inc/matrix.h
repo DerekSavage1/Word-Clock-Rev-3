@@ -42,9 +42,11 @@
 #define BMP_HAPPY           (bitmap[22])
 #define BMP_ANNIVERSARY     (bitmap[23])
 #define BMP_BIRTHDAY        (bitmap[24])
-#define BMP_NAME            (bitmap[25])
+#define BMP_KATIEDEREK      (bitmap[25])
 #define BMP_AM              (bitmap[26])
 #define BMP_PM              (bitmap[27])
+#define BMP_DEREK           (bitmap[28])
+#define BMP_KATIE           (bitmap[29])
 
 extern const uint16_t bitmap[][MATRIX_HEIGHT];
 
