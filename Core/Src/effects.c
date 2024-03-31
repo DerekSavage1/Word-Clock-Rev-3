@@ -53,6 +53,7 @@ void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uin
                 nextFrame[ledNumber].green = green;
                 nextFrame[ledNumber].blue = blue;
                 nextFrame[ledNumber].draw = true;
+                nextFrame[ledNumber].flicker = true;
             }
 
         }
@@ -87,6 +88,7 @@ void addBitmapToCurrentFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, 
                 currentFrame[ledNumber].green = green;
                 currentFrame[ledNumber].blue = blue;
                 currentFrame[ledNumber].draw = true;
+                currentFrame[ledNumber].flicker = false;
             }
 
         }
@@ -145,10 +147,13 @@ uint8_t getLitCurrentFrame(uint8_t *arr) {
 
     uint32_t index = 0;
 
+
     for(int i = 0; i < MATRIX_SIZE; i++) {
         if(currentFrame[i].red != 0 || currentFrame[i].green != 0 || currentFrame[i].blue != 0) {
-            arr[index] = i;
-            index++;
+        	if(currentFrame[i].flicker == true) {
+                arr[index] = i;
+                index++;
+        	}
         }
     }
 
@@ -161,8 +166,10 @@ uint8_t getLitNextFrame(uint8_t *arr) {
 
     for(int i = 0; i < MATRIX_SIZE; i++) {
         if(nextFrame[i].red != 0 || nextFrame[i].green != 0 || nextFrame[i].blue != 0) {
-            arr[index] = i;
-            index++;
+        	if(nextFrame[i].flicker == true) {
+                arr[index] = i;
+                index++;
+        	}
         }
     }
 
@@ -183,49 +190,88 @@ uint8_t getLitFromNextFrame(uint8_t *arr) {
     return index + 1;
 }
 
-void flickerOutEffect() {
-    uint8_t litLEDs[MATRIX_SIZE] = {0};
-    uint8_t numLit = getLitCurrentFrame(litLEDs);
+uint32_t lastTickFlicker;
 
-    if(numLit == 0)
-    	return;
-
+bool flickerOutEffectStateMachine(void) {
+    static uint8_t litLEDs[MATRIX_SIZE] = {0};
+    static uint8_t numLit = 0;
+    static uint32_t lastTickEffect = 0;
+    static uint8_t loop = 0;
+    static bool isInitialized = false;
     const uint8_t flickerLoops = 10;
-    for (uint8_t loop = 0; loop < flickerLoops; ++loop) {
+    const uint32_t delayInterval = 50; // milliseconds
+
+    if (!isInitialized) {
+        numLit = getLitCurrentFrame(litLEDs);
+        if (numLit == 0) {
+            return true; // Function did not start flickering, return false
+        }
+        loop = 0;
+        lastTickEffect = HAL_GetTick();
+        isInitialized = true;
+    }
+
+    if ((HAL_GetTick() - lastTickEffect) >= delayInterval) {
+        if (loop >= flickerLoops) {
+            // Ensure all LEDs are turned off at the end
+            for (uint8_t i = 0; i < numLit; ++i) {
+                turnOffLED((LED *) currentFrame, litLEDs[i]);
+            }
+            updatePwmBuffer((LED *) currentFrame);
+            DMA_Send(); // Update LEDs through DMA
+            // Reset for next call or trigger completion
+            isInitialized = false; // Reset the state
+            return false; // Finish the effect
+        }
+
         shuffle(litLEDs, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
-            // Invert the logic here: As loop increases,
-            // it becomes more likely to turn off the LED.
-            // This is done by comparing the random value
-            // against a decreasing threshold.
             if (randomInRange(0, flickerLoops) < loop) {
                 turnOffLED((LED *) currentFrame, litLEDs[i]);
             } else {
-                // Only explicitly turn on LEDs if there's a reason
-                // they might be off from a previous iteration.
-                // Depending on the initial state, this might not be necessary.
                 turnOnLED((LED *) currentFrame, litLEDs[i]);
             }
         }
         updatePwmBuffer((LED *) currentFrame);
         DMA_Send(); // Update LEDs through DMA
-        HAL_Delay(50); // Adjust delay as necessary for visual effect
+        lastTickEffect = HAL_GetTick();
+        loop++;
     }
-
-    // Ensure all LEDs are turned off at the end
-    for (uint8_t i = 0; i < numLit; ++i) {
-        turnOffLED((LED *) currentFrame, litLEDs[i]);
-    }
-    updatePwmBuffer((LED *) currentFrame);
-    DMA_Send(); // Update LEDs through DMA
+    return true;
 }
 
-void flickerInEffect() {
-    uint8_t litLEDs[MATRIX_SIZE] = {0};
-    uint8_t numLit = getLitCurrentFrame(litLEDs);
-
+bool flickerInEffectStateMachine(void) {
+    static uint8_t litLEDs[MATRIX_SIZE] = {0};
+    static uint8_t numLit = 0;
+    static uint32_t lastTickEffect = 0;
+    static uint8_t loop = 0;
+    static bool isInitialized = false;
     const uint8_t flickerLoops = 10;
-    for (uint8_t loop = 0; loop < flickerLoops; ++loop) {
+    const uint32_t delayInterval = 50; // milliseconds
+
+    if (!isInitialized) {
+        numLit = getLitCurrentFrame(litLEDs);
+        if (numLit == 0) {
+            return true;
+        }
+        loop = 0;
+        lastTickEffect = HAL_GetTick();
+        isInitialized = true;
+    }
+
+    if ((HAL_GetTick() - lastTickEffect) >= delayInterval) {
+        if (loop >= flickerLoops) {
+            // Ensure all LEDs are turned on at the end
+            for (uint8_t i = 0; i < numLit; ++i) {
+                turnOnLED((LED *) currentFrame, litLEDs[i]);
+            }
+            updatePwmBuffer((LED *) currentFrame);
+            DMA_Send(); // Update LEDs through DMA
+            // Reset for next call or trigger completion
+            isInitialized = false; // Reset the state
+            return false; // Finish the effect
+        }
+
         shuffle(litLEDs, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
             if (randomInRange(0, flickerLoops) > loop) {
@@ -236,15 +282,10 @@ void flickerInEffect() {
         }
         updatePwmBuffer((LED *) currentFrame);
         DMA_Send(); // Update LEDs through DMA
-        HAL_Delay(50); // Adjust delay as necessary for visual effect
+        lastTickEffect = HAL_GetTick();
+        loop++;
     }
-
-    // Ensure all LEDs are turned on at the end
-    for (uint8_t i = 0; i < numLit; ++i) {
-        turnOnLED((LED *) currentFrame, litLEDs[i]);
-    }
-    updatePwmBuffer((LED *) currentFrame);
-    DMA_Send(); // Update LEDs through DMA
+    return true;
 }
 
 extern const uint16_t * minuteBitmaps[] = {

@@ -299,6 +299,55 @@ void Wake() {
 	isSet = !counter;
 }
 
+typedef enum DisplayState {
+    STATE_IDLE,
+    STATE_FLICKER_OUT,
+    STATE_FLICKER_IN
+}DisplayState;
+
+DisplayState currentDisplayState = STATE_IDLE;
+static RTC_TimeTypeDef previousDisplayedTime = {0}; // Initialize to some value
+bool needToUpdateDisplay = true;
+bool isFlickering = false;
+
+void checkUpdateTime(RTC_TimeTypeDef currentTime) {
+    // Check if minute ends in 5 and is different from the previous time
+    if ((currentTime.Minutes % 5 == 0) && ((currentTime.Minutes != previousDisplayedTime.Minutes) || (currentTime.Hours != previousDisplayedTime.Hours))) {
+        needToUpdateDisplay = true;
+    }
+}
+
+void updateDisplay(RTC_TimeTypeDef currentTime) {
+    // Call flicker effects based on the state
+    switch (currentDisplayState) {
+        case STATE_IDLE:
+            if (needToUpdateDisplay) {
+                currentDisplayState = STATE_FLICKER_OUT; // Start the flicker out effect
+            }
+
+            break;
+        case STATE_FLICKER_OUT:
+            isFlickering = flickerOutEffectStateMachine(); // This function automatically resets its state when done
+            if (!isFlickering) { // Assume you have a way to check if flickering out has finished
+                currentDisplayState = STATE_FLICKER_IN; // Proceed to flicker in the new display
+                display_time(currentTime.Hours, currentTime.Minutes, 5, 5, 5, 5); // Update the nextFrame for flicker in
+                advanceFrame();
+            }
+
+            break;
+        case STATE_FLICKER_IN:
+        	isFlickering = flickerInEffectStateMachine(); // This function automatically resets its state when done
+            if (!isFlickering) { // Assume you have a way to check if flickering in has finished
+                currentDisplayState = STATE_IDLE; // Go back to idle state
+                needToUpdateDisplay = false;
+                previousDisplayedTime = currentTime; // Update the time once the whole effect is done
+            }
+            break;
+        default:
+        	break;
+    }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -336,13 +385,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
-  // get time and get date must both be called
   HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
   display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
   advanceFrame();
-  flickerInEffect();
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -407,17 +453,16 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
+
+
+	checkUpdateTime(sTime);
+	updateDisplay(sTime);
+
 	setAnniversary(5);
 
-	if((sTime.Minutes % 5 == 0 && sTime.Minutes != previousMinutes)) {
-		flickerOutEffect();
+//	checkUpdateTime(sTime); // Check if it's time to update the display
+//	updateDisplay(sTime); // Perform any needed display updates
 
-		display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
-		advanceFrame();
-
-		flickerInEffect();
-		previousMinutes = sTime.Minutes;
-	}
 
 
 
@@ -515,7 +560,7 @@ static void MX_RTC_Init(void)
   */
   sTime.Hours = 0x3;
   sTime.Minutes = 0x59;
-  sTime.Seconds = 0x30;
+  sTime.Seconds = 0x50;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
   if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)

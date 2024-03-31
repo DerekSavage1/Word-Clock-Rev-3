@@ -13,10 +13,6 @@ uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
 static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
 
-void setLED() {
-
-}
-
 /**
  * @brief   Turns on an LED by setting its 'draw' flag to false.
  *
