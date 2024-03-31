@@ -10,9 +10,10 @@
 ../Drivers/WS2812B/WS2812B.c:192:6:wipeCurrentFrame	2
 ../Drivers/WS2812B/WS2812B.c:200:6:wipeNextFrame	2
 ../Drivers/WS2812B/WS2812B.c:208:6:advanceFrame	1
-../Drivers/WS2812B/WS2812B.c:213:6:flickerOutEffect	5
-../Drivers/WS2812B/WS2812B.c:247:6:flickerInEffect	5
-../Drivers/WS2812B/WS2812B.c:280:6:wipePWMBuffer	2
-../Drivers/WS2812B/WS2812B.c:299:6:updatePwmBuffer	7
-../Drivers/WS2812B/WS2812B.c:335:6:DMA_Send	2
-../Drivers/WS2812B/WS2812B.c:344:6:HAL_TIM_PWM_PulseFinishedCallback	1
+../Drivers/WS2812B/WS2812B.c:213:6:flickerOutEffect	6
+../Drivers/WS2812B/WS2812B.c:250:6:flickerInEffect	5
+../Drivers/WS2812B/WS2812B.c:283:6:wipePWMBuffer	2
+../Drivers/WS2812B/WS2812B.c:302:6:updatePwmBuffer	7
+../Drivers/WS2812B/WS2812B.c:338:6:DMA_Send	2
+../Drivers/WS2812B/WS2812B.c:347:6:HAL_TIM_PWM_PulseFinishedCallback	1
+../Drivers/WS2812B/WS2812B.c:364:6:display_time	20

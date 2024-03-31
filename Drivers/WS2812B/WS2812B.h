@@ -27,6 +27,7 @@ void DMA_Send();
 void updatePwmBuffer(void);
 void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
 void addBitmapToCurrentFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
+void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
 void flickerOutEffect(void);
 void flickerInEffect(void);
 void advanceFrame(void);

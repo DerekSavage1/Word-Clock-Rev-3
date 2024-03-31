@@ -29,7 +29,6 @@
 #include <string.h>
 #include "../../Drivers/WS2812B/WS2812B.h"
 #include "../../Drivers/Numeric_Display/Numeric_Display.h"
-#include "Bitmap_Display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +99,9 @@ bool isOff = true;
 bool isSet = true;
 uint8_t lastLED = 0xFF;
 DateType currentDateType = SYSTEM_DATE;
+
+uint8_t previousMinutes = 1;
+bool completedAnimation = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -421,34 +423,23 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
-	flickerOutEffect();
-	advanceFrame();
-
-	if (toggle) {
-		// Convert the bitmap to next frame
-		addBitmapToNextFrame(BMP_ITS, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(MINUTE_THIRTY, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(BMP_PAST, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(HOUR_NINE, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(BMP_PM, 5, 5, 5, 255); // White color, full brightness
-	} else {
-		// Define a bitmap pattern for the "OFF" state
-		addBitmapToNextFrame(BMP_ITS, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(MINUTE_TWENTYFIVE, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(BMP_TILL, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(HOUR_TEN, 5, 5, 5, 255); // White color, full brightness
-		addBitmapToNextFrame(BMP_PM, 5, 5, 5, 255); // White color, full brightness
+	if (sTime.Minutes % 5 == 0 && sTime.Minutes != previousMinutes) {
+	    completedAnimation = false;
 	}
 
+	if(!completedAnimation) {
+		flickerOutEffect();
+		advanceFrame();
 
-	// Flicker in the new pattern
-	flickerInEffect();
+		display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
 
-	// Toggle the state for the next iteration
-	toggle = !toggle;
+		flickerInEffect();
+		completedAnimation = true;
+		previousMinutes = sTime.Minutes;
+	}
 
-	// Delay between transitions, adjust as needed
-	HAL_Delay(5000);
+	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
 
   }

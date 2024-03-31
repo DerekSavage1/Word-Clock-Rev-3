@@ -214,6 +214,9 @@ void flickerOutEffect() {
     uint8_t litLEDs[MATRIX_SIZE] = {0};
     uint8_t numLit = getLitCurrentFrame(litLEDs);
 
+    if(numLit == 0)
+    	return;
+
     const uint8_t flickerLoops = 10;
     for (uint8_t loop = 0; loop < flickerLoops; ++loop) {
         shuffle(litLEDs, numLit);
@@ -346,4 +349,97 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
     HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
     datasentflag = 1;
 
+}
+
+extern const uint16_t * minuteBitmaps[] = {
+		MINUTE_FIVE,
+		MINUTE_TEN,
+		MINUTE_FIFTEEN,
+		MINUTE_TWENTY,
+		MINUTE_TWENTYFIVE,
+		MINUTE_THIRTY
+};
+
+
+void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
+	addBitmapToNextFrame(BMP_ITS, red, green, blue, brightness);
+    // Round down to the nearest five minutes
+    minute = (minute / 5) * 5;
+
+    // Display minute, accounting for 'past' or 'to'
+    if (minute < 5) {
+    	//no past or till
+    } else if (minute < 35) {
+        addBitmapToNextFrame(BMP_PAST, red, green, blue, brightness);
+    } else {
+        minute = 60 - minute;
+        hour++;
+        addBitmapToNextFrame(BMP_TILL, red, green, blue, brightness);
+    }
+
+    if(hour == 0 || hour == 12);
+    else if(hour < 12) addBitmapToNextFrame(BMP_AM, red, green, blue, brightness);
+    else addBitmapToNextFrame(BMP_PM, red, green, blue, brightness);
+
+    // Display hour
+    switch(hour) {
+        case 0:
+            addBitmapToNextFrame(HOUR_MIDNIGHT, red, green, blue, brightness);
+            break;
+        case 1:
+        case 13:
+            addBitmapToNextFrame(HOUR_ONE, red, green, blue, brightness);
+            break;
+        case 2:
+        case 14:
+            addBitmapToNextFrame(HOUR_TWO, red, green, blue, brightness);
+            break;
+        case 3:
+        case 15:
+            addBitmapToNextFrame(HOUR_THREE, red, green, blue, brightness);
+            break;
+        case 4:
+        case 16:
+            addBitmapToNextFrame(HOUR_FOUR, red, green, blue, brightness);
+            break;
+        case 5:
+        case 17:
+            addBitmapToNextFrame(HOUR_FIVE, red, green, blue, brightness);
+            break;
+        case 6:
+        case 18:
+            addBitmapToNextFrame(HOUR_SIX, red, green, blue, brightness);
+            break;
+        case 7:
+        case 19:
+            addBitmapToNextFrame(HOUR_SEVEN, red, green, blue, brightness);
+            break;
+        case 8:
+        case 20:
+            addBitmapToNextFrame(HOUR_EIGHT, red, green, blue, brightness);
+            break;
+        case 9:
+        case 21:
+            addBitmapToNextFrame(HOUR_NINE, red, green, blue, brightness);
+            break;
+        case 10:
+        case 22:
+            addBitmapToNextFrame(HOUR_TEN, red, green, blue, brightness);
+            break;
+        case 11:
+        case 23:
+            addBitmapToNextFrame(HOUR_ELEVEN, red, green, blue, brightness);
+            break;
+        case 12:
+            addBitmapToNextFrame(HOUR_NOON, red, green, blue, brightness);
+            break;
+        default:
+            // Handle error or invalid hour
+            break;
+    }
+
+    // Display minute in intervals of five using an array pointing to the bitmaps
+    if (minute > 0) {
+        addBitmapToNextFrame(minuteBitmaps[(minute / 5) - 1], red, green, blue, brightness);
+    }
 }
