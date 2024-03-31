@@ -30,7 +30,7 @@ Core/Src/Bitmap_Display.o: ../Core/Src/Bitmap_Display.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Core/Inc/matrix.h ../Core/Inc/../../Drivers/WS2812B/WS2812B.h \
- ../Core/Inc/../Inc/main.h
+ ../Core/Inc/../Inc/main.h ../Core/Inc/../Inc/matrix.h
 ../Core/Inc/Bitmap_Display.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -65,3 +65,4 @@ Core/Src/Bitmap_Display.o: ../Core/Src/Bitmap_Display.c \
 ../Core/Inc/matrix.h:
 ../Core/Inc/../../Drivers/WS2812B/WS2812B.h:
 ../Core/Inc/../Inc/main.h:
+../Core/Inc/../Inc/matrix.h:

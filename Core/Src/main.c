@@ -107,8 +107,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 /* USER CODE END PFP */
@@ -186,7 +186,7 @@ void switchState(RTC_DateTypeDef * tDate) {
             break;
         case SET_HOURS:
         	counter = sTime.Minutes * sensitivity;
-        	Set_LED_Hex(141, getRainbowColor(color));
+
         	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
         	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
             currentState = SET_MINUTES; // After setting hours, set minutes
@@ -260,7 +260,7 @@ void checkButtonPress(void) {
 
 
 void SetHours() {
-    Set_LED(136, 100, 100, 100);
+
     counter = clampValue(counter, 0, 23 * sensitivity); //23 hours
     sTime.Hours = (uint8_t) (counter / sensitivity);
 
@@ -298,8 +298,7 @@ void SetColor() {
     counter = clampValue(counter, 0, 16 * sensitivity); //16 color presets
     color = (uint8_t) (counter / sensitivity);
 
-    Set_LED_Hex(136, getRainbowColor(color));
-    Set_LED_Hex(140, getRainbowColor(color));
+
 }
 
 
@@ -311,7 +310,7 @@ void SetBrightness() {
 
 void Select() {
 	counter = clampValue(counter, 0, 3 * sensitivity);
-	Set_LED_Hex(LED_SET + (!isSet), getRainbowColor(color));
+
 }
 
 void Wake() {
@@ -353,8 +352,8 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_TIM1_Init();
-  MX_RTC_Init();
   MX_TIM3_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
@@ -364,7 +363,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
+  bool toggle = false;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -422,10 +421,35 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
-	display_time(sTime.Hours, sTime.Minutes);
-	display_bmp(color, brightness);
-	WS2812B_Send(&htim1);
-	clear_display_buffer();
+	flickerOutEffect();
+	advanceFrame();
+
+	if (toggle) {
+		// Convert the bitmap to next frame
+		addBitmapToNextFrame(BMP_ITS, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(MINUTE_THIRTY, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(BMP_PAST, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(HOUR_NINE, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(BMP_PM, 5, 5, 5, 255); // White color, full brightness
+	} else {
+		// Define a bitmap pattern for the "OFF" state
+		addBitmapToNextFrame(BMP_ITS, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(MINUTE_TWENTYFIVE, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(BMP_TILL, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(HOUR_TEN, 5, 5, 5, 255); // White color, full brightness
+		addBitmapToNextFrame(BMP_PM, 5, 5, 5, 255); // White color, full brightness
+	}
+
+
+	// Flicker in the new pattern
+	flickerInEffect();
+
+	// Toggle the state for the next iteration
+	toggle = !toggle;
+
+	// Delay between transitions, adjust as needed
+	HAL_Delay(5000);
+
 
   }
   /* USER CODE END 3 */
@@ -448,13 +472,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 12;
   RCC_OscInitStruct.PLL.PLLN = 72;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
@@ -517,21 +540,21 @@ static void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
-  sTime.Hours = 7;
-  sTime.Minutes = 15;
-  sTime.Seconds = 50;
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
   {
     Error_Handler();
   }
-  sDate.WeekDay = RTC_WEEKDAY_TUESDAY;
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
   sDate.Month = RTC_MONTH_JANUARY;
-  sDate.Date = 23;
-  sDate.Year = 24;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
 
-  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
   {
     Error_Handler();
   }
@@ -553,6 +576,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
@@ -567,6 +591,15 @@ static void MX_TIM1_Init(void)
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();

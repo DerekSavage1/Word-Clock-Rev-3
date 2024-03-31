@@ -8,7 +8,14 @@
 #ifndef SRC_MATRIX_H_
 #define SRC_MATRIX_H_
 
+#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdbool.h>
+
+#define MATRIX_WIDTH 11
+#define MATRIX_HEIGHT 13
 
 #define HOUR_ONE            (bitmap[0])
 #define HOUR_TWO            (bitmap[1])
@@ -39,6 +46,6 @@
 #define BMP_AM              (bitmap[26])
 #define BMP_PM              (bitmap[27])
 
-extern const uint16_t bitmap[][12];
+extern const uint16_t bitmap[][MATRIX_HEIGHT];
 
 #endif /* SRC_MATRIX_H_ */

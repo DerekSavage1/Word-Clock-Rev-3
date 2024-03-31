@@ -7,60 +7,335 @@
 
 #include "WS2812B.h"
 
-uint8_t LED_Data[NUM_LEDS][3]; // color data green / red / blue
 volatile int datasentflag;
-
-
-void Set_LED(uint8_t LEDnum, uint8_t Red, uint8_t Green, uint8_t Blue) {
-
-    if(LEDnum < NUM_LEDS) {
-        LED_Data[LEDnum][0] = Green;
-        LED_Data[LEDnum][1] = Red;
-        LED_Data[LEDnum][2] = Blue;
-    }
-}
-
-void Set_LED_Hex(uint8_t LEDnum, uint32_t color) {
-
-    if(LEDnum < NUM_LEDS) {
-        uint8_t Red = (color >> 16) & 0xFF;
-        uint8_t Green = (color >> 8) & 0xFF;
-        uint8_t Blue = color & 0xFF;
-        LED_Data[LEDnum][0] = Green;
-        LED_Data[LEDnum][1] = Red;
-        LED_Data[LEDnum][2] = Blue;
-    }
-}
-
 extern TIM_HandleTypeDef htim1;
-
 uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
+typedef struct {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    bool draw;
+} LED;
+static LED nextFrame[MATRIX_SIZE];
+static LED currentFrame[MATRIX_SIZE];
+static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
 
-void WS2812B_Send() { // Changed to pointer to match typical HAL use.
 
-    uint32_t indx = 0;
-    uint32_t data;
+/**
+ * @brief Converts a bitmap to PWM data for WS2812B LEDs.
+ *
+ * Converts a bitmap into PWM data for driving WS2812B LEDs. Each bit in the bitmap
+ * corresponds to an LED in a left-to-right, top-to-bottom layout, where a set bit
+ * represents an illuminated LED and a clear bit represents an unilluminated LED.
+ * The PWM data includes color information based on the specified 24-bit color and
+ * brightness level. ONE and ZERO are defined based on a 72Mhz clock.
+ *
+ * @param[in] bitmap     Bitmap representing LED layout.
+ * @param[in] color      24-bit color value (0xRRGGBB).
+ * @param[in] brightness Brightness level (0-255).
+ */
+void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
 
-//     Shifting colors into 24-bit buffer
-    for (int i = 0; i < NUM_LEDS; i++) {
+    //TODO: create function
+    // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
 
-        data = ((LED_Data[i][0] << 16) | (LED_Data[i][1] << 8) | (LED_Data[i][2]));
+    for(int i = 0; i < MATRIX_HEIGHT; i++) {
+        for(int j = 0; j < MATRIX_WIDTH; j++) {
 
-        for (int j = 23; j >= 0; j--) {
-            if (data & (1 << j))
-                pwmData[indx] = ONE; // Use defined duty cycle for ONE
-            else
-                pwmData[indx] = ZERO; // Use defined duty cycle for ZERO
-            indx++;
+            uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
+
+            if(matrix[i] & (1 << j)) {
+                nextFrame[ledNumber].red = red;
+                nextFrame[ledNumber].green = green;
+                nextFrame[ledNumber].blue = blue;
+                nextFrame[ledNumber].draw = true;
+            }
+
+        }
+    }
+}
+
+/**
+ * @brief Converts a bitmap to PWM data for WS2812B LEDs.
+ *
+ * Converts a bitmap into PWM data for driving WS2812B LEDs. Each bit in the bitmap
+ * corresponds to an LED in a left-to-right, top-to-bottom layout, where a set bit
+ * represents an illuminated LED and a clear bit represents an unilluminated LED.
+ * The PWM data includes color information based on the specified 24-bit color and
+ * brightness level. ONE and ZERO are defined based on a 72Mhz clock.
+ *
+ * @param[in] bitmap     Bitmap representing LED layout.
+ * @param[in] color      24-bit color value (0xRRGGBB).
+ * @param[in] brightness Brightness level (0-255).
+ */
+void addBitmapToCurrentFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
+
+    //TODO: create function
+    // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
+
+    for(int i = 0; i < MATRIX_HEIGHT; i++) {
+        for(int j = 0; j < MATRIX_WIDTH; j++) {
+
+            uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
+
+            if(matrix[i] & (1 << j)) {
+                currentFrame[ledNumber].red = red;
+                currentFrame[ledNumber].green = green;
+                currentFrame[ledNumber].blue = blue;
+                currentFrame[ledNumber].draw = true;
+            }
+
+        }
+    }
+}
+
+/**
+ * @brief   Extracts indices of lit LEDs from the LED buffer.
+ *
+ * This function iterates through the LED buffer, storing the indices of lit LEDs
+ * in the provided array. An LED is considered lit if its red, green, or blue
+ * component is nonzero.
+ *
+ * @param   arr Pointer to an array for storing indices of lit LEDs.
+ *            This array should be preallocated by the caller.
+ *
+ * @return  Number of lit LEDs found. This value represents the size of the updated array.
+ */
+uint8_t getLitCurrentFrame(uint8_t *arr) {
+
+    uint32_t index = 0;
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+        if(currentFrame[i].red != 0 || currentFrame[i].green != 0 || currentFrame[i].blue != 0) {
+            arr[index] = i;
+            index++;
         }
     }
 
-    // Create the reset signal by putting low values (0) at the end of pwmData
-    for (int j = 0; j < RESET_SLOTS; j++) {
-        pwmData[indx++] = 0;
+    return index + 1;
+}
+
+uint8_t getLitNextFrame(uint8_t *arr) {
+
+    uint32_t index = 0;
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+        if(nextFrame[i].red != 0 || nextFrame[i].green != 0 || nextFrame[i].blue != 0) {
+            arr[index] = i;
+            index++;
+        }
     }
 
-    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmData, indx);
+    return index + 1;
+}
+
+uint8_t getLitFromNextFrame(uint8_t *arr) {
+
+    uint32_t index = 0;
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+        if(nextFrame[i].red != 0 || nextFrame[i].green != 0 || nextFrame[i].blue != 0) {
+            arr[index] = i;
+            index++;
+        }
+    }
+
+    return index + 1;
+}
+
+
+/**
+ * @brief   Turns on an LED by setting its 'draw' flag to false.
+ *
+ * @param   number The number of the LED to turn on.
+ */
+void turnOnLED(uint8_t number) {
+	currentFrame[number].draw = true;
+}
+
+/**
+ * @brief   Turns off an LED by setting its 'draw' flag to false.
+ *
+ * @param   number The number of the LED to turn off.
+ */
+void turnOffLED(uint8_t number) {
+	currentFrame[number].draw = false;
+}
+
+/**
+ * @brief   Shuffles the elements of an array randomly.
+ *
+ * Rearranges the elements of the given array in a random order.
+ * Each possible permutation is equally likely.
+ *
+ * @param   array Pointer to the array to be shuffled.
+ * @param   size  Number of elements in the array.
+ *
+ * @note    The array must be non-empty and contain at least two elements for shuffling to occur.
+ *          Otherwise, the function does nothing.
+ */
+void shuffle(uint8_t *array, uint32_t size) {
+    if (size > 1) {
+        for (uint32_t i = 0; i < size - 1; i++) {
+            uint32_t j = i + rand() / (RAND_MAX / (size - i) + 1);
+            uint8_t t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
+}
+
+int randomInRange(int min, int max) {
+    return min + rand() % (max - min + 1);
+}
+
+void wipeCurrentFrame() {
+	for(int i = 0; i < MATRIX_SIZE; i++) {
+		currentFrame[i].blue = 0;
+		currentFrame[i].green = 0;
+		currentFrame[i].red = 0;
+	}
+}
+
+void wipeNextFrame() {
+	for(int i = 0; i < MATRIX_SIZE; i++) {
+		nextFrame[i].blue = 0;
+		nextFrame[i].green = 0;
+		nextFrame[i].red = 0;
+	}
+}
+
+void advanceFrame() {
+    memcpy(currentFrame, nextFrame, sizeof(currentFrame));
+    wipeNextFrame();
+}
+
+void flickerOutEffect() {
+    uint8_t litLEDs[MATRIX_SIZE] = {0};
+    uint8_t numLit = getLitCurrentFrame(litLEDs);
+
+    const uint8_t flickerLoops = 10;
+    for (uint8_t loop = 0; loop < flickerLoops; ++loop) {
+        shuffle(litLEDs, numLit);
+        for (uint8_t i = 0; i < numLit; ++i) {
+            // Invert the logic here: As loop increases,
+            // it becomes more likely to turn off the LED.
+            // This is done by comparing the random value
+            // against a decreasing threshold.
+            if (randomInRange(0, flickerLoops) < loop) {
+                turnOffLED(litLEDs[i]);
+            } else {
+                // Only explicitly turn on LEDs if there's a reason
+                // they might be off from a previous iteration.
+                // Depending on the initial state, this might not be necessary.
+                turnOnLED(litLEDs[i]);
+            }
+        }
+        updatePwmBuffer();
+        DMA_Send(); // Update LEDs through DMA
+        HAL_Delay(50); // Adjust delay as necessary for visual effect
+    }
+
+    // Ensure all LEDs are turned off at the end
+    for (uint8_t i = 0; i < numLit; ++i) {
+        turnOffLED(litLEDs[i]);
+    }
+    updatePwmBuffer();
+    DMA_Send(); // Update LEDs through DMA
+}
+
+void flickerInEffect() {
+    uint8_t litLEDs[MATRIX_SIZE] = {0};
+    uint8_t numLit = getLitCurrentFrame(litLEDs);
+
+    const uint8_t flickerLoops = 10;
+    for (uint8_t loop = 0; loop < flickerLoops; ++loop) {
+        shuffle(litLEDs, numLit);
+        for (uint8_t i = 0; i < numLit; ++i) {
+            if (randomInRange(0, flickerLoops) > loop) {
+                turnOffLED(litLEDs[i]);
+            } else {
+                turnOnLED(litLEDs[i]);
+            }
+        }
+        updatePwmBuffer();
+        DMA_Send(); // Update LEDs through DMA
+        HAL_Delay(50); // Adjust delay as necessary for visual effect
+    }
+
+    // Ensure all LEDs are turned on at the end
+    for (uint8_t i = 0; i < numLit; ++i) {
+        turnOnLED(litLEDs[i]);
+    }
+    updatePwmBuffer();
+    DMA_Send(); // Update LEDs through DMA
+}
+
+/**
+ * @brief Converts a bitmap to PWM data for WS2812B LEDs.
+ *
+ * Wipes PWM Buffer by filling it with user defined ZERO PWM values.
+ *
+ */
+void wipePWMBuffer(void) {
+    for(int i = 0; i < PWM_ARRAY_SIZE; i++) {
+        pwmBuffer[i] = ZERO;
+    }
+}
+
+
+
+/**
+ * @brief   Updates the PWM buffer based on the LED data.
+ *
+ * This function iterates through each LED in the LED buffer, extracts
+ * the red, green, and blue components, and converts them into PWM signals.
+ * It assumes that the LEDs follow the ws2812b protocol, which uses GRB
+ * (green, red, blue) order.
+ *
+ * @note    The PWM buffer must be appropriately sized to accommodate the
+ *          LED data. Each LED requires 24 bits in the PWM buffer.
+ */
+void updatePwmBuffer(void) {
+
+    wipePWMBuffer();
+
+    for(int ledNumber = 0; ledNumber < MATRIX_SIZE; ledNumber++) {
+
+        if(!currentFrame[ledNumber].draw) {
+            continue;
+        }
+
+
+        uint8_t red     = currentFrame[ledNumber].red;
+        uint8_t green   = currentFrame[ledNumber].green;
+        uint8_t blue    = currentFrame[ledNumber].blue;
+        uint32_t arrayIndex = ledNumber * 24;
+
+        // ws2812b is GRB, so we swap the positions of red and green
+        for(int bit = 0; bit < 8; bit++) {
+
+            if(green & (1 << bit)) {
+                pwmBuffer[arrayIndex + 16 + (7 - bit)] = ONE;
+            }
+
+            if(red & (1 << bit)) {
+                pwmBuffer[arrayIndex + 8 + (7 - bit)] = ONE;
+            }
+
+            if(blue & (1 << bit)) {
+                pwmBuffer[arrayIndex + (7 - bit)] = ONE;
+            }
+        }
+
+    }
+}
+
+
+void DMA_Send() {
+
+	//FIXME: The data is 1 bit too far to the left.
+    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmBuffer, PWM_ARRAY_SIZE + 1);
 	while (!datasentflag) {}
 	datasentflag = 0;
 
@@ -68,9 +343,7 @@ void WS2812B_Send() { // Changed to pointer to match typical HAL use.
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 
-    // Properly stop the PWM output after the transmission is complete
     HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_1);
-
-    // Set the flag indicating that the data has been sent
     datasentflag = 1;
+
 }
