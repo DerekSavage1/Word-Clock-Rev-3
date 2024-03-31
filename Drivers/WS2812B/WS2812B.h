@@ -12,6 +12,13 @@
 #include "../Inc/matrix.h"
 #include <string.h>
 
+typedef struct {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    bool draw;
+} LED;
+
 #define MATRIX_SIZE (MATRIX_HEIGHT * MATRIX_WIDTH)
 
 #define ONE (0.60 * 90)  // 60% duty cycle, adjust the base unit as per your PWM frequency
@@ -24,12 +31,10 @@
 void Set_LED(uint8_t, uint8_t, uint8_t, uint8_t);
 void Set_LED_Hex(uint8_t, uint32_t);
 void DMA_Send();
-void updatePwmBuffer(void);
-void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
-void addBitmapToCurrentFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
-void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness);
-void flickerOutEffect(void);
-void flickerInEffect(void);
-void advanceFrame(void);
+void updatePwmBuffer(LED *currentFrame);
+void turnOffLED(LED *currentFrame, uint8_t number);
+void turnOnLED(LED *currentFrame, uint8_t number);
+
+
 
 #endif /* WS2812B_WS2812B_H_ */

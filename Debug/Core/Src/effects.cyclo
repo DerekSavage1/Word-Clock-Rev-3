@@ -1,0 +1,13 @@
+../Core/Src/effects.c:41:6:addBitmapToNextFrame	4
+../Core/Src/effects.c:75:6:addBitmapToCurrentFrame	4
+../Core/Src/effects.c:96:6:shuffle	3
+../Core/Src/effects.c:107:5:randomInRange	1
+../Core/Src/effects.c:111:6:wipeCurrentFrame	2
+../Core/Src/effects.c:119:6:wipeNextFrame	2
+../Core/Src/effects.c:127:6:advanceFrame	1
+../Core/Src/effects.c:144:9:getLitCurrentFrame	5
+../Core/Src/effects.c:158:9:getLitNextFrame	5
+../Core/Src/effects.c:172:9:getLitFromNextFrame	5
+../Core/Src/effects.c:186:6:flickerOutEffect	6
+../Core/Src/effects.c:223:6:flickerInEffect	5
+../Core/Src/effects.c:260:6:display_time	20

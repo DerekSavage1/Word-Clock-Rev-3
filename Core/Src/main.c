@@ -27,8 +27,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../Drivers/WS2812B/WS2812B.h"
 #include "../../Drivers/Numeric_Display/Numeric_Display.h"
+#include "effects.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,8 +100,7 @@ bool isSet = true;
 uint8_t lastLED = 0xFF;
 DateType currentDateType = SYSTEM_DATE;
 
-uint8_t previousMinutes = 1;
-bool completedAnimation = false;
+uint8_t previousMinutes = 60;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -359,13 +358,18 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
 
+  // get time and get date must both be called
+  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+  display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
+  flickerInEffect();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  bool toggle = false;
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -423,20 +427,17 @@ int main(void)
 	__HAL_TIM_SET_COUNTER(&htim3, counter);
 	Segment_Display(displayStr);
 
-	if (sTime.Minutes % 5 == 0 && sTime.Minutes != previousMinutes) {
-	    completedAnimation = false;
-	}
-
-	if(!completedAnimation) {
+	if((sTime.Minutes % 5 == 0 && sTime.Minutes != previousMinutes)) {
 		flickerOutEffect();
 		advanceFrame();
 
 		display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
 
 		flickerInEffect();
-		completedAnimation = true;
 		previousMinutes = sTime.Minutes;
 	}
+
+
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
@@ -531,7 +532,7 @@ static void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
-  sTime.Hours = 0x0;
+  sTime.Hours = 0x2;
   sTime.Minutes = 0x0;
   sTime.Seconds = 0x0;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
