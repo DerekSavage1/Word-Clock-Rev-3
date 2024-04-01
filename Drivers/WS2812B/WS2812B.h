@@ -38,7 +38,10 @@ typedef struct {
 void DMA_Send(void);
 void wipePWMBuffer(void);
 void updatePwmBuffer(LED *currentFrame);
-void turnOffLED(LED *currentFrame, uint8_t number);
-void turnOnLED(LED *currentFrame, uint8_t number);
+void turnOffLED(LED *frame, uint8_t index);
+void turnOnLED(LED *frame, uint8_t index);
+void toggleLED(LED *frame, uint8_t index);
+bool isLEDOn(LED *frame, uint8_t index);
+void removeLED(LED *frame, uint8_t index);
 
 #endif /* WS2812B_WS2812B_H_ */

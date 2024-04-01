@@ -468,8 +468,9 @@ int main(void)
 
 //	setAnniversary(5);
 
-	if(HAL_GetTick() - lastTick > 5000) {
+	if(HAL_GetTick() - lastTick > 1000) {
 		sTime.Minutes = sTime.Minutes + 1;
+		lastTick = HAL_GetTick();
 	}
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);

@@ -101,7 +101,7 @@ void advanceFrame() {
  *
  * @return  Number of lit LEDs found. This value represents the size of the updated array.
  */
-uint8_t getLit(uint8_t *result, Effect effect, LED *frame) {
+uint8_t getLit(uint8_t *result, LED *frame, Effect effect) {
 
     uint32_t index = 0;
 
@@ -129,7 +129,7 @@ bool flickerOutEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLit(litLEDs, FLICKER, (LED *) currentFrame);
+        numLit = getLit(litLEDs, (LED *) currentFrame, FLICKER);
         if (numLit == 0) {
             return true; // Function did not start flickering, return false
         }
@@ -177,7 +177,7 @@ bool flickerInEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLit(litLEDs, FLICKER, (LED *) currentFrame);
+        numLit = getLit(litLEDs, (LED *) currentFrame, FLICKER);
         if (numLit == 0) {
             return true;
         }

@@ -18,8 +18,8 @@ static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
  *
  * @param   number The number of the LED to turn on.
  */
-void turnOnLED(LED *currentFrame, uint8_t number) {
-	currentFrame[number].draw = true;
+void turnOnLED(LED *frame, uint8_t index) {
+	frame[index].draw = true;
 }
 
 /**
@@ -27,8 +27,29 @@ void turnOnLED(LED *currentFrame, uint8_t number) {
  *
  * @param   number The number of the LED to turn off.
  */
-void turnOffLED(LED *currentFrame, uint8_t number) {
-	currentFrame[number].draw = false;
+void turnOffLED(LED *frame, uint8_t index) {
+	frame[index].draw = false;
+}
+
+void toggleLED(LED *frame, uint8_t index) {
+	frame[index].draw = !frame[index].draw;
+}
+
+bool isLEDOn(LED* frame, uint8_t index) {
+
+    if (index >= MATRIX_SIZE) {
+        return false; // Index is out of bound, so LED is off by default.
+    }
+
+    return frame[index].draw == true;
+}
+
+void removeLED(LED *frame, uint8_t index) {
+	frame[index].blue = 0;
+	frame[index].red = 0;
+	frame[index].green = 0;
+	frame[index].effect = NONE;
+	frame[index].draw = false;
 }
 
 

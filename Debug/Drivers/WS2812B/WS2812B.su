@@ -1,6 +1,9 @@
 ../Drivers/WS2812B/WS2812B.c:21:6:turnOnLED	16	static
 ../Drivers/WS2812B/WS2812B.c:30:6:turnOffLED	16	static
-../Drivers/WS2812B/WS2812B.c:41:6:wipePWMBuffer	16	static
-../Drivers/WS2812B/WS2812B.c:58:6:updatePwmBuffer	32	static
-../Drivers/WS2812B/WS2812B.c:94:6:DMA_Send	8	static
-../Drivers/WS2812B/WS2812B.c:102:6:HAL_TIM_PWM_PulseFinishedCallback	16	static
+../Drivers/WS2812B/WS2812B.c:34:6:toggleLED	16	static
+../Drivers/WS2812B/WS2812B.c:38:6:isLEDOn	16	static
+../Drivers/WS2812B/WS2812B.c:47:6:removeLED	16	static
+../Drivers/WS2812B/WS2812B.c:62:6:wipePWMBuffer	16	static
+../Drivers/WS2812B/WS2812B.c:79:6:updatePwmBuffer	32	static
+../Drivers/WS2812B/WS2812B.c:115:6:DMA_Send	8	static
+../Drivers/WS2812B/WS2812B.c:123:6:HAL_TIM_PWM_PulseFinishedCallback	16	static
