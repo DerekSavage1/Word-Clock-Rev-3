@@ -12,11 +12,17 @@
 #include "../Inc/matrix.h"
 #include <string.h>
 
+typedef enum {
+	NONE,
+	RAINBOW,
+	FLICKER
+} Effect;
+
 typedef struct {
     uint8_t red;
     uint8_t green;
     uint8_t blue;
-    bool flicker;
+    Effect effect;
     bool draw;
 } LED;
 

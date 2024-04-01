@@ -330,7 +330,11 @@ void updateDisplay(RTC_TimeTypeDef currentTime) {
             isFlickering = flickerOutEffectStateMachine(); // This function automatically resets its state when done
             if (!isFlickering) { // Assume you have a way to check if flickering out has finished
                 currentDisplayState = STATE_FLICKER_IN; // Proceed to flicker in the new display
-                display_time(currentTime.Hours, currentTime.Minutes, 5, 5, 5, 5); // Update the nextFrame for flicker in
+                RgbColor color;
+                color.r = 5;
+                color.g = 5;
+                color.b = 5;
+                display_time(currentTime.Hours, currentTime.Minutes, color); // Update the nextFrame for flicker in
                 advanceFrame();
             }
 
@@ -387,7 +391,11 @@ int main(void)
 
   HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-  display_time(sTime.Hours, sTime.Minutes, 5, 5, 5, 5);
+  RgbColor color;
+  color.r = 5;
+  color.g = 5;
+  color.b = 5;
+  display_time(sTime.Hours, sTime.Minutes, color);
   advanceFrame();
   /* USER CODE END 2 */
 
@@ -458,7 +466,14 @@ int main(void)
 	checkUpdateTime(sTime);
 	updateDisplay(sTime);
 
-	setAnniversary(5);
+//	setAnniversary(5);
+
+	if(HAL_GetTick() - lastTick > 5000) {
+		sTime.Minutes = sTime.Minutes + 1;
+	}
+
+	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
 //	checkUpdateTime(sTime); // Check if it's time to update the display
 //	updateDisplay(sTime); // Perform any needed display updates

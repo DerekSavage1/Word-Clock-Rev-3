@@ -38,7 +38,7 @@ static LED currentFrame[MATRIX_SIZE];
  * @param[in] color      24-bit color value (0xRRGGBB).
  * @param[in] brightness Brightness level (0-255).
  */
-void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
+void addBitmapToFrame(const uint16_t matrix[MATRIX_HEIGHT], LED *frame, RgbColor color, Effect effect) {
 
     //TODO: create function
     // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
@@ -49,46 +49,11 @@ void addBitmapToNextFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uin
             uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
 
             if(matrix[i] & (1 << j)) {
-                nextFrame[ledNumber].red = red;
-                nextFrame[ledNumber].green = green;
-                nextFrame[ledNumber].blue = blue;
-                nextFrame[ledNumber].draw = true;
-                nextFrame[ledNumber].flicker = true;
-            }
-
-        }
-    }
-}
-
-/**
- * @brief Converts a bitmap to PWM data for WS2812B LEDs.
- *
- * Converts a bitmap into PWM data for driving WS2812B LEDs. Each bit in the bitmap
- * corresponds to an LED in a left-to-right, top-to-bottom layout, where a set bit
- * represents an illuminated LED and a clear bit represents an unilluminated LED.
- * The PWM data includes color information based on the specified 24-bit color and
- * brightness level. ONE and ZERO are defined based on a 72Mhz clock.
- *
- * @param[in] bitmap     Bitmap representing LED layout.
- * @param[in] color      24-bit color value (0xRRGGBB).
- * @param[in] brightness Brightness level (0-255).
- */
-void addBitmapToCurrentFrame(const uint16_t matrix[MATRIX_HEIGHT], uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
-
-    //TODO: create function
-    // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
-
-    for(int i = 0; i < MATRIX_HEIGHT; i++) {
-        for(int j = 0; j < MATRIX_WIDTH; j++) {
-
-            uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
-
-            if(matrix[i] & (1 << j)) {
-                currentFrame[ledNumber].red = red;
-                currentFrame[ledNumber].green = green;
-                currentFrame[ledNumber].blue = blue;
-                currentFrame[ledNumber].draw = true;
-                currentFrame[ledNumber].flicker = false;
+            	frame[ledNumber].red = color.r;
+            	frame[ledNumber].green = color.g;
+            	frame[ledNumber].blue = color.b;
+            	frame[ledNumber].draw = true;
+            	frame[ledNumber].effect = effect;
             }
 
         }
@@ -110,25 +75,18 @@ int randomInRange(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
-void wipeCurrentFrame() {
+void wipeFrame(LED *frame) {
 	for(int i = 0; i < MATRIX_SIZE; i++) {
-		currentFrame[i].blue = 0;
-		currentFrame[i].green = 0;
-		currentFrame[i].red = 0;
-	}
-}
-
-void wipeNextFrame() {
-	for(int i = 0; i < MATRIX_SIZE; i++) {
-		nextFrame[i].blue = 0;
-		nextFrame[i].green = 0;
-		nextFrame[i].red = 0;
+		frame[i].blue = 0;
+		frame[i].green = 0;
+		frame[i].red = 0;
+		frame[i].effect = NONE;
 	}
 }
 
 void advanceFrame() {
     memcpy(currentFrame, nextFrame, sizeof(currentFrame));
-    wipeNextFrame();
+    wipeFrame((LED *) nextFrame);
 }
 
 /**
@@ -143,47 +101,16 @@ void advanceFrame() {
  *
  * @return  Number of lit LEDs found. This value represents the size of the updated array.
  */
-uint8_t getLitCurrentFrame(uint8_t *arr) {
+uint8_t getLit(uint8_t *result, Effect effect, LED *frame) {
 
     uint32_t index = 0;
 
-
     for(int i = 0; i < MATRIX_SIZE; i++) {
-        if(currentFrame[i].red != 0 || currentFrame[i].green != 0 || currentFrame[i].blue != 0) {
-        	if(currentFrame[i].flicker == true) {
-                arr[index] = i;
+        if(frame[i].red != 0 || frame[i].green != 0 || frame[i].blue != 0) {
+        	if(frame[i].effect == effect) {
+        		result[index] = i;
                 index++;
         	}
-        }
-    }
-
-    return index + 1;
-}
-
-uint8_t getLitNextFrame(uint8_t *arr) {
-
-    uint32_t index = 0;
-
-    for(int i = 0; i < MATRIX_SIZE; i++) {
-        if(nextFrame[i].red != 0 || nextFrame[i].green != 0 || nextFrame[i].blue != 0) {
-        	if(nextFrame[i].flicker == true) {
-                arr[index] = i;
-                index++;
-        	}
-        }
-    }
-
-    return index + 1;
-}
-
-uint8_t getLitFromNextFrame(uint8_t *arr) {
-
-    uint32_t index = 0;
-
-    for(int i = 0; i < MATRIX_SIZE; i++) {
-        if(nextFrame[i].red != 0 || nextFrame[i].green != 0 || nextFrame[i].blue != 0) {
-            arr[index] = i;
-            index++;
         }
     }
 
@@ -202,7 +129,7 @@ bool flickerOutEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLitCurrentFrame(litLEDs);
+        numLit = getLit(litLEDs, FLICKER, (LED *) currentFrame);
         if (numLit == 0) {
             return true; // Function did not start flickering, return false
         }
@@ -250,7 +177,7 @@ bool flickerInEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLitCurrentFrame(litLEDs);
+        numLit = getLit(litLEDs, FLICKER, (LED *) currentFrame);
         if (numLit == 0) {
             return true;
         }
@@ -310,16 +237,16 @@ void setAnniversary(uint8_t brightness) {
 
 	RgbColor rgb = HsvToRgb(lastColor);
 
-	addBitmapToCurrentFrame(BMP_HAPPY, rgb.r, rgb.g, rgb.b, 255);
-	addBitmapToCurrentFrame(BMP_ANNIVERSARY, rgb.r, rgb.g, rgb.b, 255);
-	addBitmapToCurrentFrame(BMP_KATIEDEREK, rgb.r, rgb.g, rgb.b, 255);
+	addBitmapToCurrentFrame(BMP_HAPPY, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
+	addBitmapToCurrentFrame(BMP_ANNIVERSARY, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
+	addBitmapToCurrentFrame(BMP_KATIEDEREK, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
 
 	updatePwmBuffer((LED *) currentFrame);
 	DMA_Send();
 }
 
-void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
-	addBitmapToNextFrame(BMP_ITS, red, green, blue, brightness);
+void display_time(int hour, int minute, RgbColor color) {
+	addBitmapToFrame(BMP_ITS, (LED *) nextFrame, color, FLICKER);
     // Round down to the nearest five minutes
     minute = (minute / 5) * 5;
 
@@ -327,68 +254,68 @@ void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue
     if (minute < 5) {
     	//no past or till
     } else if (minute < 35) {
-        addBitmapToNextFrame(BMP_PAST, red, green, blue, brightness);
+        addBitmapToFrame(BMP_PAST, (LED *) nextFrame, color, FLICKER);
     } else {
         minute = 60 - minute;
         hour++;
-        addBitmapToNextFrame(BMP_TILL, red, green, blue, brightness);
+        addBitmapToFrame(BMP_TILL, (LED *) nextFrame, color, FLICKER);
     }
 
     if(hour == 0 || hour == 12);
-    else if(hour < 12) addBitmapToNextFrame(BMP_AM, red, green, blue, brightness);
-    else addBitmapToNextFrame(BMP_PM, red, green, blue, brightness);
+    else if(hour < 12) addBitmapToFrame(BMP_AM, (LED *) nextFrame, color, FLICKER);
+    else addBitmapToFrame(BMP_PM, (LED *) nextFrame, color, FLICKER);
 
     // Display hour
     switch(hour) {
         case 0:
-            addBitmapToNextFrame(HOUR_MIDNIGHT, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_MIDNIGHT, (LED *) nextFrame, color, FLICKER);
             break;
         case 1:
         case 13:
-            addBitmapToNextFrame(HOUR_ONE, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_ONE, (LED *) nextFrame, color, FLICKER);
             break;
         case 2:
         case 14:
-            addBitmapToNextFrame(HOUR_TWO, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_TWO, (LED *) nextFrame, color, FLICKER);
             break;
         case 3:
         case 15:
-            addBitmapToNextFrame(HOUR_THREE, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_THREE, (LED *) nextFrame, color, FLICKER);
             break;
         case 4:
         case 16:
-            addBitmapToNextFrame(HOUR_FOUR, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_FOUR, (LED *) nextFrame, color, FLICKER);
             break;
         case 5:
         case 17:
-            addBitmapToNextFrame(HOUR_FIVE, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_FIVE, (LED *) nextFrame, color, FLICKER);
             break;
         case 6:
         case 18:
-            addBitmapToNextFrame(HOUR_SIX, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_SIX, (LED *) nextFrame, color, FLICKER);
             break;
         case 7:
         case 19:
-            addBitmapToNextFrame(HOUR_SEVEN, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_SEVEN, (LED *) nextFrame, color, FLICKER);
             break;
         case 8:
         case 20:
-            addBitmapToNextFrame(HOUR_EIGHT, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_EIGHT, (LED *) nextFrame, color, FLICKER);
             break;
         case 9:
         case 21:
-            addBitmapToNextFrame(HOUR_NINE, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_NINE, (LED *) nextFrame, color, FLICKER);
             break;
         case 10:
         case 22:
-            addBitmapToNextFrame(HOUR_TEN, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_TEN, (LED *) nextFrame, color, FLICKER);
             break;
         case 11:
         case 23:
-            addBitmapToNextFrame(HOUR_ELEVEN, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_ELEVEN, (LED *) nextFrame, color, FLICKER);
             break;
         case 12:
-            addBitmapToNextFrame(HOUR_NOON, red, green, blue, brightness);
+            addBitmapToFrame(HOUR_NOON, (LED *) nextFrame, color, FLICKER);
             break;
         default:
             // Handle error or invalid hour
@@ -397,7 +324,7 @@ void display_time(int hour, int minute, uint8_t red, uint8_t green, uint8_t blue
 
     // Display minute in intervals of five using an array pointing to the bitmaps
     if (minute > 0) {
-        addBitmapToNextFrame(minuteBitmaps[(minute / 5) - 1], red, green, blue, brightness);
+        addBitmapToFrame(minuteBitmaps[(minute / 5) - 1], (LED *) nextFrame, color, FLICKER);
     }
 }
 
