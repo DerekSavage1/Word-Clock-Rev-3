@@ -1,3 +1,0 @@
-../Drivers/Numeric_Display/Numeric_Display.c:14:6:setSegments	1
-../Drivers/Numeric_Display/Numeric_Display.c:26:6:activateDigit	1
-../Drivers/Numeric_Display/Numeric_Display.c:36:6:Segment_Display	41

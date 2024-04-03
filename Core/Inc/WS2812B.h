@@ -8,9 +8,11 @@
 #ifndef WS2812B_WS2812B_H_
 #define WS2812B_WS2812B_H_
 
-#include "../Inc/main.h"
-#include "../Inc/matrix.h"
+#include "main.h"
+#include "stdbool.h"
+#include "matrix.h"
 #include <string.h>
+
 
 typedef enum {
 	NONE,
@@ -23,7 +25,7 @@ typedef struct {
     uint8_t green;
     uint8_t blue;
     Effect effect;
-    bool draw;
+    bool on;
 } LED;
 
 #define MATRIX_SIZE (MATRIX_HEIGHT * MATRIX_WIDTH)
@@ -43,5 +45,6 @@ void turnOnLED(LED *frame, uint8_t index);
 void toggleLED(LED *frame, uint8_t index);
 bool isLEDOn(LED *frame, uint8_t index);
 void removeLED(LED *frame, uint8_t index);
+uint8_t getLEDsWithEffect(uint8_t *result, LED *display, Effect effect);
 
 #endif /* WS2812B_WS2812B_H_ */

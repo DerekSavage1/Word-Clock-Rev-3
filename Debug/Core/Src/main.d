@@ -28,10 +28,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Core/Src/../../Drivers/Numeric_Display/Numeric_Display.h \
- ../Core/Inc/effects.h ../Core/Inc/main.h \
- ../Core/Inc/../../Drivers/WS2812B/WS2812B.h ../Core/Inc/../Inc/main.h \
- ../Core/Inc/../Inc/matrix.h
+ ../Core/Inc/Numeric_Display.h ../Core/Inc/main.h ../Core/Inc/effects.h \
+ ../Core/Inc/color.h ../Core/Inc/WS2812B.h ../Core/Inc/matrix.h \
+ ../Core/Inc/display.h ../Core/Inc/random.h ../Core/Inc/color.h \
+ ../Core/Inc/time_display.h ../Core/Inc/effects.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -62,9 +62,14 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
-../Core/Src/../../Drivers/Numeric_Display/Numeric_Display.h:
-../Core/Inc/effects.h:
+../Core/Inc/Numeric_Display.h:
 ../Core/Inc/main.h:
-../Core/Inc/../../Drivers/WS2812B/WS2812B.h:
-../Core/Inc/../Inc/main.h:
-../Core/Inc/../Inc/matrix.h:
+../Core/Inc/effects.h:
+../Core/Inc/color.h:
+../Core/Inc/WS2812B.h:
+../Core/Inc/matrix.h:
+../Core/Inc/display.h:
+../Core/Inc/random.h:
+../Core/Inc/color.h:
+../Core/Inc/time_display.h:
+../Core/Inc/effects.h:

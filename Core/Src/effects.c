@@ -5,25 +5,10 @@
  *      Author: dsava
  */
 
-/**
- * @brief   Shuffles the elements of an array randomly.
- *
- * Rearranges the elements of the given array in a random order.
- * Each possible permutation is equally likely.
- *
- * @param   array Pointer to the array to be shuffled.
- * @param   size  Number of elements in the array.
- *
- * @note    The array must be non-empty and contain at least two elements for shuffling to occur.
- *          Otherwise, the function does nothing.
- */
-
-
-
 #include "effects.h"
 
-static LED nextFrame[MATRIX_SIZE];
-static LED currentFrame[MATRIX_SIZE];
+static LED targetDisplay[MATRIX_SIZE];
+static LED currentDisplay[MATRIX_SIZE];
 
 /**
  * @brief Converts a bitmap to PWM data for WS2812B LEDs.
@@ -38,7 +23,7 @@ static LED currentFrame[MATRIX_SIZE];
  * @param[in] color      24-bit color value (0xRRGGBB).
  * @param[in] brightness Brightness level (0-255).
  */
-void addBitmapToFrame(const uint16_t matrix[MATRIX_HEIGHT], LED *frame, RgbColor color, Effect effect) {
+void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, RgbColor color, Effect effect) {
 
     //TODO: create function
     // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
@@ -49,77 +34,93 @@ void addBitmapToFrame(const uint16_t matrix[MATRIX_HEIGHT], LED *frame, RgbColor
             uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
 
             if(matrix[i] & (1 << j)) {
-            	frame[ledNumber].red = color.r;
-            	frame[ledNumber].green = color.g;
-            	frame[ledNumber].blue = color.b;
-            	frame[ledNumber].draw = true;
-            	frame[ledNumber].effect = effect;
+            	display[ledNumber].red = color.r;
+            	display[ledNumber].green = color.g;
+            	display[ledNumber].blue = color.b;
+            	display[ledNumber].on = true;
+            	display[ledNumber].effect = effect;
             }
 
         }
     }
 }
 
-void shuffle(uint8_t *array, uint32_t size) {
-    if (size > 1) {
-        for (uint32_t i = 0; i < size - 1; i++) {
-            uint32_t j = i + rand() / (RAND_MAX / (size - i) + 1);
-            uint8_t t = array[j];
-            array[j] = array[i];
-            array[i] = t;
-        }
+
+
+typedef enum FlickerState {
+    STATE_IDLE,
+    STATE_FLICKER_OUT,
+    STATE_FLICKER_IN
+}FlickerState;
+
+FlickerState currentFlickerState = STATE_IDLE;
+static RTC_TimeTypeDef previousDisplayedTime = {0}; // Initialize to some value
+bool needToUpdateDisplay = true;
+bool isFlickering = false;
+
+void checkUpdateTime(RTC_TimeTypeDef currentTime) {
+    // Check if minute ends in 5 and is different from the previous time
+    if ((currentTime.Minutes % 5 == 0) && ((currentTime.Minutes != previousDisplayedTime.Minutes) || (currentTime.Hours != previousDisplayedTime.Hours))) {
+        needToUpdateDisplay = true;
     }
 }
 
-int randomInRange(int min, int max) {
-    return min + rand() % (max - min + 1);
+void updateDisplay(RTC_TimeTypeDef currentTime) {
+    // Call flicker effects based on the state
+    switch (currentFlickerState) {
+        case STATE_IDLE:
+            if (needToUpdateDisplay) {
+                currentFlickerState = STATE_FLICKER_OUT; // Start the flicker out effect
+            }
+
+            break;
+        case STATE_FLICKER_OUT:
+            isFlickering = flickerOut(); // This function automatically resets its state when done
+            if (!isFlickering) { // Assume you have a way to check if flickering out has finished
+                currentFlickerState = STATE_FLICKER_IN; // Proceed to flicker in the new display
+                RgbColor color;
+                color.r = 5;
+                color.g = 5;
+                color.b = 5;
+                display_time(currentTime.Hours, currentTime.Minutes, color); // Update the nextFrame for flicker in
+                advanceDisplay();
+            }
+
+            break;
+        case STATE_FLICKER_IN:
+        	isFlickering = flickerIn(); // This function automatically resets its state when done
+            if (!isFlickering) { // Assume you have a way to check if flickering in has finished
+                currentFlickerState = STATE_IDLE; // Go back to idle state
+                needToUpdateDisplay = false;
+                previousDisplayedTime = currentTime; // Update the time once the whole effect is done
+            }
+            break;
+        default:
+        	break;
+    }
 }
 
-void wipeFrame(LED *frame) {
+
+
+void wipeDisplay(LED *display) {
 	for(int i = 0; i < MATRIX_SIZE; i++) {
-		frame[i].blue = 0;
-		frame[i].green = 0;
-		frame[i].red = 0;
-		frame[i].effect = NONE;
+		display[i].blue = 0;
+		display[i].green = 0;
+		display[i].red = 0;
+		display[i].effect = NONE;
 	}
 }
 
-void advanceFrame() {
-    memcpy(currentFrame, nextFrame, sizeof(currentFrame));
-    wipeFrame((LED *) nextFrame);
+void advanceDisplay() {
+    memcpy(currentDisplay, targetDisplay, sizeof(currentDisplay));
+    wipeDisplay((LED *) targetDisplay);
 }
 
-/**
- * @brief   Extracts indices of lit LEDs from the LED buffer.
- *
- * This function iterates through the LED buffer, storing the indices of lit LEDs
- * in the provided array. An LED is considered lit if its red, green, or blue
- * component is nonzero.
- *
- * @param   arr Pointer to an array for storing indices of lit LEDs.
- *            This array should be preallocated by the caller.
- *
- * @return  Number of lit LEDs found. This value represents the size of the updated array.
- */
-uint8_t getLit(uint8_t *result, LED *frame, Effect effect) {
 
-    uint32_t index = 0;
-
-    for(int i = 0; i < MATRIX_SIZE; i++) {
-        if(frame[i].red != 0 || frame[i].green != 0 || frame[i].blue != 0) {
-        	if(frame[i].effect == effect) {
-        		result[index] = i;
-                index++;
-        	}
-        }
-    }
-
-    return index + 1;
-}
 
 uint32_t lastTickFlicker;
 
-bool flickerOutEffectStateMachine(void) {
+bool flickerOut(void) {
     static uint8_t litLEDs[MATRIX_SIZE] = {0};
     static uint8_t numLit = 0;
     static uint32_t lastTickEffect = 0;
@@ -129,7 +130,7 @@ bool flickerOutEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLit(litLEDs, (LED *) currentFrame, FLICKER);
+        numLit = getLEDsWithEffect(litLEDs, (LED *) currentDisplay, FLICKER);
         if (numLit == 0) {
             return true; // Function did not start flickering, return false
         }
@@ -142,24 +143,24 @@ bool flickerOutEffectStateMachine(void) {
         if (loop >= flickerLoops) {
             // Ensure all LEDs are turned off at the end
             for (uint8_t i = 0; i < numLit; ++i) {
-                turnOffLED((LED *) currentFrame, litLEDs[i]);
+                turnOffLED((LED *) currentDisplay, litLEDs[i]);
             }
-            updatePwmBuffer((LED *) currentFrame);
+            updatePwmBuffer((LED *) currentDisplay);
             DMA_Send(); // Update LEDs through DMA
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
         }
 
-        shuffle(litLEDs, numLit);
+        shuffleArray(litLEDs, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
-            if (randomInRange(0, flickerLoops) < loop) {
-                turnOffLED((LED *) currentFrame, litLEDs[i]);
+            if (RANDOM_IN_RANGE(0, flickerLoops) < loop) {
+                turnOffLED((LED *) currentDisplay, litLEDs[i]);
             } else {
-                turnOnLED((LED *) currentFrame, litLEDs[i]);
+                turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
         }
-        updatePwmBuffer((LED *) currentFrame);
+        updatePwmBuffer((LED *) currentDisplay);
         DMA_Send(); // Update LEDs through DMA
         lastTickEffect = HAL_GetTick();
         loop++;
@@ -167,7 +168,7 @@ bool flickerOutEffectStateMachine(void) {
     return true;
 }
 
-bool flickerInEffectStateMachine(void) {
+bool flickerIn(void) {
     static uint8_t litLEDs[MATRIX_SIZE] = {0};
     static uint8_t numLit = 0;
     static uint32_t lastTickEffect = 0;
@@ -177,7 +178,7 @@ bool flickerInEffectStateMachine(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLit(litLEDs, (LED *) currentFrame, FLICKER);
+        numLit = getLEDsWithEffect(litLEDs, (LED *) currentDisplay, FLICKER);
         if (numLit == 0) {
             return true;
         }
@@ -190,24 +191,24 @@ bool flickerInEffectStateMachine(void) {
         if (loop >= flickerLoops) {
             // Ensure all LEDs are turned on at the end
             for (uint8_t i = 0; i < numLit; ++i) {
-                turnOnLED((LED *) currentFrame, litLEDs[i]);
+                turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
-            updatePwmBuffer((LED *) currentFrame);
+            updatePwmBuffer((LED *) currentDisplay);
             DMA_Send(); // Update LEDs through DMA
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
         }
 
-        shuffle(litLEDs, numLit);
+        shuffleArray(litLEDs, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
-            if (randomInRange(0, flickerLoops) > loop) {
-                turnOffLED((LED *) currentFrame, litLEDs[i]);
+            if (RANDOM_IN_RANGE(0, flickerLoops) > loop) {
+                turnOffLED((LED *) currentDisplay, litLEDs[i]);
             } else {
-                turnOnLED((LED *) currentFrame, litLEDs[i]);
+                turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
         }
-        updatePwmBuffer((LED *) currentFrame);
+        updatePwmBuffer((LED *) currentDisplay);
         DMA_Send(); // Update LEDs through DMA
         lastTickEffect = HAL_GetTick();
         loop++;
@@ -215,14 +216,7 @@ bool flickerInEffectStateMachine(void) {
     return true;
 }
 
-extern const uint16_t * minuteBitmaps[] = {
-		MINUTE_FIVE,
-		MINUTE_TEN,
-		MINUTE_FIFTEEN,
-		MINUTE_TWENTY,
-		MINUTE_TWENTYFIVE,
-		MINUTE_THIRTY
-};
+
 
 HsvColor lastColor = {0};
 
@@ -237,171 +231,81 @@ void setAnniversary(uint8_t brightness) {
 
 	RgbColor rgb = HsvToRgb(lastColor);
 
-	addBitmapToCurrentFrame(BMP_HAPPY, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
-	addBitmapToCurrentFrame(BMP_ANNIVERSARY, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
-	addBitmapToCurrentFrame(BMP_KATIEDEREK, rgb.r, rgb.g, rgb.b, 255, RAINBOW);
+	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, rgb, RAINBOW);
+	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, rgb, RAINBOW);
+	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, rgb, RAINBOW);
 
-	updatePwmBuffer((LED *) currentFrame);
+	updatePwmBuffer((LED *) currentDisplay);
 	DMA_Send();
 }
 
+const uint16_t *hourBitmaps[] = {
+		HOUR_MIDNIGHT,
+		HOUR_ONE,
+		HOUR_TWO,
+		HOUR_THREE,
+		HOUR_FOUR,
+		HOUR_FIVE,
+		HOUR_SIX,
+		HOUR_SEVEN,
+		HOUR_EIGHT,
+		HOUR_NINE,
+		HOUR_TEN,
+		HOUR_ELEVEN,
+		HOUR_NOON
+};
+
+const uint16_t *minuteBitmaps[] = {
+		MINUTE_FIVE,
+		MINUTE_TEN,
+		MINUTE_FIFTEEN,
+		MINUTE_TWENTY,
+		MINUTE_TWENTYFIVE,
+		MINUTE_THIRTY
+};
+
 void display_time(int hour, int minute, RgbColor color) {
-	addBitmapToFrame(BMP_ITS, (LED *) nextFrame, color, FLICKER);
-    // Round down to the nearest five minutes
-    minute = (minute / 5) * 5;
+    addBitmapToDisplay(BMP_ITS, (LED *) targetDisplay, color, FLICKER);
 
-    // Display minute, accounting for 'past' or 'to'
-    if (minute < 5) {
-    	//no past or till
-    } else if (minute < 35) {
-        addBitmapToFrame(BMP_PAST, (LED *) nextFrame, color, FLICKER);
+    // Round down to the nearest five minutes and determine if it is 'past' or 'to' the hour
+    int roundedMinute = (minute / 5) * 5;
+    if (roundedMinute > 0) {
+        if (roundedMinute < 35) {
+            addBitmapToDisplay(BMP_PAST, (LED *) targetDisplay, color, FLICKER);
+        } else {
+            roundedMinute = 60 - roundedMinute;
+            hour++;
+            addBitmapToDisplay(BMP_TILL, (LED *) targetDisplay, color, FLICKER);
+        }
+    }
+
+    // Normalize the hour to a 12-hour format and display AM/PM where applicable
+    hour %= 24; // Normalize hour to 0-23
+    if(hour == 0 || hour == 12) {
+        // It's exactly midnight or noon, so we will handle it in the hour display section.
+    } else if (hour < 12) {
+        addBitmapToDisplay(BMP_AM, (LED *) targetDisplay, color, FLICKER);
     } else {
-        minute = 60 - minute;
-        hour++;
-        addBitmapToFrame(BMP_TILL, (LED *) nextFrame, color, FLICKER);
+        addBitmapToDisplay(BMP_PM, (LED *) targetDisplay, color, FLICKER);
     }
 
-    if(hour == 0 || hour == 12);
-    else if(hour < 12) addBitmapToFrame(BMP_AM, (LED *) nextFrame, color, FLICKER);
-    else addBitmapToFrame(BMP_PM, (LED *) nextFrame, color, FLICKER);
-
-    // Display hour
-    switch(hour) {
-        case 0:
-            addBitmapToFrame(HOUR_MIDNIGHT, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 1:
-        case 13:
-            addBitmapToFrame(HOUR_ONE, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 2:
-        case 14:
-            addBitmapToFrame(HOUR_TWO, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 3:
-        case 15:
-            addBitmapToFrame(HOUR_THREE, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 4:
-        case 16:
-            addBitmapToFrame(HOUR_FOUR, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 5:
-        case 17:
-            addBitmapToFrame(HOUR_FIVE, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 6:
-        case 18:
-            addBitmapToFrame(HOUR_SIX, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 7:
-        case 19:
-            addBitmapToFrame(HOUR_SEVEN, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 8:
-        case 20:
-            addBitmapToFrame(HOUR_EIGHT, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 9:
-        case 21:
-            addBitmapToFrame(HOUR_NINE, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 10:
-        case 22:
-            addBitmapToFrame(HOUR_TEN, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 11:
-        case 23:
-            addBitmapToFrame(HOUR_ELEVEN, (LED *) nextFrame, color, FLICKER);
-            break;
-        case 12:
-            addBitmapToFrame(HOUR_NOON, (LED *) nextFrame, color, FLICKER);
-            break;
-        default:
-            // Handle error or invalid hour
-            break;
+    // Display the hour, normalizing hour again for 12-hour format with special cases for noon and midnight
+    if (hour > 12) {
+        hour -= 12; // Convert to 12-hour format
+    }
+    if (hour == 0) {
+        hour = 12; // Adjust for midnight/noon display
     }
 
-    // Display minute in intervals of five using an array pointing to the bitmaps
-    if (minute > 0) {
-        addBitmapToFrame(minuteBitmaps[(minute / 5) - 1], (LED *) nextFrame, color, FLICKER);
+    // Use an array to simplify hour display logic
+    if(hour >= 1 && hour <= 12) {
+        addBitmapToDisplay(hourBitmaps[hour % 12], (LED *) targetDisplay, color, FLICKER);
+    }
+
+    // Display the minute in intervals of five using an array pointing to the bitmaps
+    if (roundedMinute > 0) {
+        addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, color, FLICKER);
     }
 }
 
-RgbColor HsvToRgb(HsvColor hsv)
-{
-    RgbColor rgb;
-    unsigned char region, remainder, p, q, t;
 
-    if (hsv.s == 0)
-    {
-        rgb.r = hsv.v;
-        rgb.g = hsv.v;
-        rgb.b = hsv.v;
-        return rgb;
-    }
-
-    region = hsv.h / 43;
-    remainder = (hsv.h - (region * 43)) * 6;
-
-    p = (hsv.v * (255 - hsv.s)) >> 8;
-    q = (hsv.v * (255 - ((hsv.s * remainder) >> 8))) >> 8;
-    t = (hsv.v * (255 - ((hsv.s * (255 - remainder)) >> 8))) >> 8;
-
-    switch (region)
-    {
-        case 0:
-            rgb.r = hsv.v; rgb.g = t; rgb.b = p;
-            break;
-        case 1:
-            rgb.r = q; rgb.g = hsv.v; rgb.b = p;
-            break;
-        case 2:
-            rgb.r = p; rgb.g = hsv.v; rgb.b = t;
-            break;
-        case 3:
-            rgb.r = p; rgb.g = q; rgb.b = hsv.v;
-            break;
-        case 4:
-            rgb.r = t; rgb.g = p; rgb.b = hsv.v;
-            break;
-        default:
-            rgb.r = hsv.v; rgb.g = p; rgb.b = q;
-            break;
-    }
-
-    return rgb;
-}
-
-HsvColor RgbToHsv(RgbColor rgb)
-{
-    HsvColor hsv;
-    unsigned char rgbMin, rgbMax;
-
-    rgbMin = rgb.r < rgb.g ? (rgb.r < rgb.b ? rgb.r : rgb.b) : (rgb.g < rgb.b ? rgb.g : rgb.b);
-    rgbMax = rgb.r > rgb.g ? (rgb.r > rgb.b ? rgb.r : rgb.b) : (rgb.g > rgb.b ? rgb.g : rgb.b);
-
-    hsv.v = rgbMax;
-    if (hsv.v == 0)
-    {
-        hsv.h = 0;
-        hsv.s = 0;
-        return hsv;
-    }
-
-    hsv.s = (255 * (long)(rgbMax - rgbMin)) / hsv.v;
-    if (hsv.s == 0)
-    {
-        hsv.h = 0;
-        return hsv;
-    }
-
-    if (rgbMax == rgb.r)
-        hsv.h = 0 + 43 * (rgb.g - rgb.b) / (rgbMax - rgbMin);
-    else if (rgbMax == rgb.g)
-        hsv.h = 85 + 43 * (rgb.b - rgb.r) / (rgbMax - rgbMin);
-    else
-        hsv.h = 171 + 43 * (rgb.r - rgb.g) / (rgbMax - rgbMin);
-
-    return hsv;
-}

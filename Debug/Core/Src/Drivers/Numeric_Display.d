@@ -1,6 +1,5 @@
-Drivers/Numeric_Display/Numeric_Display.o: \
- ../Drivers/Numeric_Display/Numeric_Display.c \
- ../Drivers/Numeric_Display/Numeric_Display.h ../Core/Inc/main.h \
+Core/Src/Drivers/Numeric_Display.o: ../Core/Src/Drivers/Numeric_Display.c \
+ ../Core/Inc/Numeric_Display.h ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -30,7 +29,7 @@ Drivers/Numeric_Display/Numeric_Display.o: \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
-../Drivers/Numeric_Display/Numeric_Display.h:
+../Core/Inc/Numeric_Display.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:

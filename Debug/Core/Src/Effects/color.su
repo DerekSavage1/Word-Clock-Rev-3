@@ -1,0 +1,2 @@
+../Core/Src/Effects/color.c:10:10:HsvToRgb	32	static
+../Core/Src/Effects/color.c:55:10:RgbToHsv	32	static

@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
-#include <stdbool.h>
 
 #define MATRIX_WIDTH 11
 #define MATRIX_HEIGHT 13

@@ -19,7 +19,7 @@ static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
  * @param   number The number of the LED to turn on.
  */
 void turnOnLED(LED *frame, uint8_t index) {
-	frame[index].draw = true;
+	frame[index].on = true;
 }
 
 /**
@@ -28,11 +28,11 @@ void turnOnLED(LED *frame, uint8_t index) {
  * @param   number The number of the LED to turn off.
  */
 void turnOffLED(LED *frame, uint8_t index) {
-	frame[index].draw = false;
+	frame[index].on = false;
 }
 
 void toggleLED(LED *frame, uint8_t index) {
-	frame[index].draw = !frame[index].draw;
+	frame[index].on = !frame[index].on;
 }
 
 bool isLEDOn(LED* frame, uint8_t index) {
@@ -41,7 +41,33 @@ bool isLEDOn(LED* frame, uint8_t index) {
         return false; // Index is out of bound, so LED is off by default.
     }
 
-    return frame[index].draw == true;
+    return frame[index].on == true;
+}
+
+/**
+ * @brief   Extracts indices of lit LEDs from the LED buffer.
+ *
+ * This function iterates through the LED buffer, storing the indices of lit LEDs
+ * in the provided array. An LED is considered lit if its red, green, or blue
+ * component is nonzero.
+ *
+ * @param   arr Pointer to an array for storing indices of lit LEDs.
+ *            This array should be preallocated by the caller.
+ *
+ * @return  Number of lit LEDs found. This value represents the size of the updated array.
+ */
+uint8_t getLEDsWithEffect(uint8_t *result, LED *display, Effect effect) {
+
+    uint32_t index = 0;
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+    	if(display[i].effect == effect) {
+    		result[index] = i;
+            index++;
+    	}
+    }
+
+    return index++;
 }
 
 void removeLED(LED *frame, uint8_t index) {
@@ -49,7 +75,7 @@ void removeLED(LED *frame, uint8_t index) {
 	frame[index].red = 0;
 	frame[index].green = 0;
 	frame[index].effect = NONE;
-	frame[index].draw = false;
+	frame[index].on = false;
 }
 
 
@@ -82,7 +108,7 @@ void updatePwmBuffer(LED *currentFrame) {
 
     for(int ledNumber = 0; ledNumber < MATRIX_SIZE; ledNumber++) {
 
-        if(!currentFrame[ledNumber].draw) {
+        if(!currentFrame[ledNumber].on) {
             continue;
         }
 

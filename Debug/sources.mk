@@ -38,9 +38,9 @@ CPP_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Core/Src/Drivers \
+Core/Src/Effects \
 Core/Src \
 Core/Startup \
-Drivers/Numeric_Display \
 Drivers/STM32F4xx_HAL_Driver/Src \
-Drivers/WS2812B \
 

@@ -1,9 +1,0 @@
-../Drivers/WS2812B/WS2812B.c:21:6:turnOnLED	1
-../Drivers/WS2812B/WS2812B.c:30:6:turnOffLED	1
-../Drivers/WS2812B/WS2812B.c:34:6:toggleLED	1
-../Drivers/WS2812B/WS2812B.c:38:6:isLEDOn	2
-../Drivers/WS2812B/WS2812B.c:47:6:removeLED	1
-../Drivers/WS2812B/WS2812B.c:62:6:wipePWMBuffer	2
-../Drivers/WS2812B/WS2812B.c:79:6:updatePwmBuffer	7
-../Drivers/WS2812B/WS2812B.c:115:6:DMA_Send	2
-../Drivers/WS2812B/WS2812B.c:123:6:HAL_TIM_PWM_PulseFinishedCallback	1

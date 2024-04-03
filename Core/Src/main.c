@@ -27,8 +27,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../../Drivers/Numeric_Display/Numeric_Display.h"
+#include "Numeric_Display.h"
 #include "effects.h"
+#include "color.h"
+#include "time_display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -299,59 +301,6 @@ void Wake() {
 	isSet = !counter;
 }
 
-typedef enum DisplayState {
-    STATE_IDLE,
-    STATE_FLICKER_OUT,
-    STATE_FLICKER_IN
-}DisplayState;
-
-DisplayState currentDisplayState = STATE_IDLE;
-static RTC_TimeTypeDef previousDisplayedTime = {0}; // Initialize to some value
-bool needToUpdateDisplay = true;
-bool isFlickering = false;
-
-void checkUpdateTime(RTC_TimeTypeDef currentTime) {
-    // Check if minute ends in 5 and is different from the previous time
-    if ((currentTime.Minutes % 5 == 0) && ((currentTime.Minutes != previousDisplayedTime.Minutes) || (currentTime.Hours != previousDisplayedTime.Hours))) {
-        needToUpdateDisplay = true;
-    }
-}
-
-void updateDisplay(RTC_TimeTypeDef currentTime) {
-    // Call flicker effects based on the state
-    switch (currentDisplayState) {
-        case STATE_IDLE:
-            if (needToUpdateDisplay) {
-                currentDisplayState = STATE_FLICKER_OUT; // Start the flicker out effect
-            }
-
-            break;
-        case STATE_FLICKER_OUT:
-            isFlickering = flickerOutEffectStateMachine(); // This function automatically resets its state when done
-            if (!isFlickering) { // Assume you have a way to check if flickering out has finished
-                currentDisplayState = STATE_FLICKER_IN; // Proceed to flicker in the new display
-                RgbColor color;
-                color.r = 5;
-                color.g = 5;
-                color.b = 5;
-                display_time(currentTime.Hours, currentTime.Minutes, color); // Update the nextFrame for flicker in
-                advanceFrame();
-            }
-
-            break;
-        case STATE_FLICKER_IN:
-        	isFlickering = flickerInEffectStateMachine(); // This function automatically resets its state when done
-            if (!isFlickering) { // Assume you have a way to check if flickering in has finished
-                currentDisplayState = STATE_IDLE; // Go back to idle state
-                needToUpdateDisplay = false;
-                previousDisplayedTime = currentTime; // Update the time once the whole effect is done
-            }
-            break;
-        default:
-        	break;
-    }
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -396,7 +345,7 @@ int main(void)
   color.g = 5;
   color.b = 5;
   display_time(sTime.Hours, sTime.Minutes, color);
-  advanceFrame();
+  advanceDisplay();
   /* USER CODE END 2 */
 
   /* Infinite loop */
