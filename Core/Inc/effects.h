@@ -8,9 +8,9 @@
 #ifndef INC_EFFECTS_H_
 #define INC_EFFECTS_H_
 
+#include <ws2812b.h>
 #include "main.h"
 #include "color.h"
-#include "WS2812B.h"
 #include "display.h"
 #include "random.h"
 

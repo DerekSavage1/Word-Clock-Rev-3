@@ -22,5 +22,8 @@ typedef struct HsvColor
     unsigned char v;
 } HsvColor;
 
+RgbColor HsvToRgb(HsvColor hsv);
+HsvColor RgbToHsv(RgbColor rgb);
+
 
 #endif /* INC_COLOR_H_ */

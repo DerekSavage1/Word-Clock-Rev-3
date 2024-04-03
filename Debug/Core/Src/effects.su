@@ -1,9 +1,0 @@
-../Core/Src/effects.c:26:6:addBitmapToDisplay	40	static
-../Core/Src/effects.c:61:6:checkUpdateTime	8	static
-../Core/Src/effects.c:68:6:updateDisplay	24	static
-../Core/Src/effects.c:105:6:wipeDisplay	24	static
-../Core/Src/effects.c:114:6:advanceDisplay	8	static
-../Core/Src/effects.c:123:6:flickerOut	16	static
-../Core/Src/effects.c:171:6:flickerIn	16	static
-../Core/Src/effects.c:223:6:setAnniversary	24	static
-../Core/Src/effects.c:267:6:display_time	32	static

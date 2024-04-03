@@ -1,0 +1,15 @@
+../Core/Src/UI/settings.c:27:13:getDeviceState	4	static
+../Core/Src/UI/settings.c:31:6:setDeviceState	16	static
+../Core/Src/UI/settings.c:35:10:getCounter	4	static
+../Core/Src/UI/settings.c:39:6:setCounter	16	static
+../Core/Src/UI/settings.c:43:10:getSelected	4	static
+../Core/Src/UI/settings.c:47:18:getTime	4	static
+../Core/Src/UI/settings.c:51:18:getDate	16	static
+../Core/Src/UI/settings.c:64:6:setColor	16	static
+../Core/Src/UI/settings.c:68:10:getColor	16	static
+../Core/Src/UI/settings.c:72:10:getDateState	4	static
+../Core/Src/UI/settings.c:76:6:setDateState	16	static
+../Core/Src/UI/settings.c:80:9:getBrightness	4	static
+../Core/Src/UI/settings.c:84:6:setBrightness	16	static
+../Core/Src/UI/settings.c:88:6:setMode	16	static
+../Core/Src/UI/settings.c:92:6:getMode	4	static

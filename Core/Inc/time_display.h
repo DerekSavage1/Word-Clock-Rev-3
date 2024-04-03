@@ -9,14 +9,14 @@
 #define INC_TIME_DISPLAY_H_
 
 #include <stdint.h>
+#include <ws2812b.h>
 #include "matrix.h"
 #include "color.h"
-#include "WS2812B.h"
-#include "effects.h"
+#include "display.h"
 
 extern const uint16_t *hourBitmaps[];
-
 extern const uint16_t *minuteBitmaps[];
 
+void display_time(int hour, int minute, RgbColor color);
 
 #endif /* INC_TIME_DISPLAY_H_ */

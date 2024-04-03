@@ -5,7 +5,7 @@
  *      Author: dsava
  */
 
-#include "WS2812B.h"
+#include <ws2812b.h>
 
 volatile int datasentflag;
 extern TIM_HandleTypeDef htim1;

@@ -1,0 +1,3 @@
+../Core/Src/Graphics/display.c:13:6:addBitmapToDisplay	4
+../Core/Src/Graphics/display.c:35:6:wipeDisplay	2
+../Core/Src/Graphics/display.c:44:6:advanceDisplay	1

@@ -5,7 +5,7 @@
  *      Author: dsava
  */
 
-#include "Numeric_Display.h"
+#include <numeric_display.h>
 
 char outputBuffer[CHAR_TO_DISPLAY_MAX] = {0};
 

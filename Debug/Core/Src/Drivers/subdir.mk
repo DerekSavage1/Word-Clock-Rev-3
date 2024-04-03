@@ -5,16 +5,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/Drivers/Numeric_Display.c \
-../Core/Src/Drivers/WS2812B.c 
+../Core/Src/Drivers/numeric_display.c \
+../Core/Src/Drivers/ws2812b.c 
 
 C_DEPS += \
-./Core/Src/Drivers/Numeric_Display.d \
-./Core/Src/Drivers/WS2812B.d 
+./Core/Src/Drivers/numeric_display.d \
+./Core/Src/Drivers/ws2812b.d 
 
 OBJS += \
-./Core/Src/Drivers/Numeric_Display.o \
-./Core/Src/Drivers/WS2812B.o 
+./Core/Src/Drivers/numeric_display.o \
+./Core/Src/Drivers/ws2812b.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -24,7 +24,7 @@ Core/Src/Drivers/%.o Core/Src/Drivers/%.su Core/Src/Drivers/%.cyclo: ../Core/Src
 clean: clean-Core-2f-Src-2f-Drivers
 
 clean-Core-2f-Src-2f-Drivers:
-	-$(RM) ./Core/Src/Drivers/Numeric_Display.cyclo ./Core/Src/Drivers/Numeric_Display.d ./Core/Src/Drivers/Numeric_Display.o ./Core/Src/Drivers/Numeric_Display.su ./Core/Src/Drivers/WS2812B.cyclo ./Core/Src/Drivers/WS2812B.d ./Core/Src/Drivers/WS2812B.o ./Core/Src/Drivers/WS2812B.su
+	-$(RM) ./Core/Src/Drivers/numeric_display.cyclo ./Core/Src/Drivers/numeric_display.d ./Core/Src/Drivers/numeric_display.o ./Core/Src/Drivers/numeric_display.su ./Core/Src/Drivers/ws2812b.cyclo ./Core/Src/Drivers/ws2812b.d ./Core/Src/Drivers/ws2812b.o ./Core/Src/Drivers/ws2812b.su
 
 .PHONY: clean-Core-2f-Src-2f-Drivers
 

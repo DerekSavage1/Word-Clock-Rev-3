@@ -13,6 +13,6 @@
 
 #define RANDOM_IN_RANGE(min, max) ((min) + rand() % ((max) - (min) + 1))
 
-
+void shuffleArray(uint8_t *array, uint32_t size);
 
 #endif /* INC_RANDOM_H_ */
