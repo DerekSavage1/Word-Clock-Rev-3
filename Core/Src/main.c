@@ -34,6 +34,8 @@
 #include "button.h"
 #include "menu.h"
 #include "settings.h"
+#include "rainbow.h"
+#include "twinkle.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,12 +45,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_SET   136
-#define LED_DELETE 137
-#define LED_SET_TIME 141
-#define LED_SET_COLOR 140
-#define LED_SET_ANNIVERSARY 139
-#define LED_SET_BIRTHDAY 138
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -69,8 +65,6 @@ RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
 RTC_DateTypeDef aDate;
 RTC_DateTypeDef bDate;
-
-char displayStr[10];
 
 uint32_t lastTick = 0;
 
@@ -159,11 +153,13 @@ int main(void)
 
 	configureSettings();
 
-	 snprintf(displayStr, sizeof(displayStr), "%02d:%02d", sTime.Hours, sTime.Minutes);
-	__HAL_TIM_SET_COUNTER(&htim3, getCounter());
-	Segment_Display(displayStr);
 
+	Segment_Display(getDisplayString());
 
+	display_birthday();
+
+	rainbow(5);
+	twinkle();
 
 	checkUpdateTime(sTime);
 	updateDisplay(sTime);
@@ -177,6 +173,8 @@ int main(void)
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+	sendDisplayToDMA();
 
 
 
@@ -387,7 +385,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 4;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;

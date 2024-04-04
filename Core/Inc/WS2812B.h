@@ -17,7 +17,8 @@
 typedef enum {
 	NONE,
 	RAINBOW,
-	FLICKER
+	FLICKER,
+	TWINKLE
 } Effect;
 
 typedef struct {

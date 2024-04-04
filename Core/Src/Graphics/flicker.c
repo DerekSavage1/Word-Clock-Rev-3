@@ -81,8 +81,6 @@ bool flickerOut(void) {
             for (uint8_t i = 0; i < numLit; ++i) {
                 turnOffLED((LED *) currentDisplay, litLEDs[i]);
             }
-            updatePwmBuffer((LED *) currentDisplay);
-            DMA_Send(); // Update LEDs through DMA
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
@@ -96,8 +94,6 @@ bool flickerOut(void) {
                 turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
         }
-        updatePwmBuffer((LED *) currentDisplay);
-        DMA_Send(); // Update LEDs through DMA
         lastTickEffect = HAL_GetTick();
         loop++;
     }
@@ -129,8 +125,6 @@ bool flickerIn(void) {
             for (uint8_t i = 0; i < numLit; ++i) {
                 turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
-            updatePwmBuffer((LED *) currentDisplay);
-            DMA_Send(); // Update LEDs through DMA
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
@@ -144,8 +138,6 @@ bool flickerIn(void) {
                 turnOnLED((LED *) currentDisplay, litLEDs[i]);
             }
         }
-        updatePwmBuffer((LED *) currentDisplay);
-        DMA_Send(); // Update LEDs through DMA
         lastTickEffect = HAL_GetTick();
         loop++;
     }

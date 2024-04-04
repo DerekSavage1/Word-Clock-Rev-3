@@ -11,6 +11,13 @@
 #include <stdint.h>
 #include "main.h"
 #include "color.h"
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+
+#define MAX_STRING_LENGTH 10
+#define SENSITIVITY 10
 
 typedef enum {
   SLEEP,
@@ -37,6 +44,7 @@ typedef enum Mode {
 } Mode;
 
 
+
 DeviceState getDeviceState(void);
 void setDeviceState(DeviceState);
 uint32_t getSelected(void);
@@ -52,6 +60,11 @@ void setBrightness(uint8_t _brightness);
 uint32_t getCounter(void);
 void setMode(Mode _mode);
 Mode getMode(void);
+uint8_t getBrightness(void);
+char *getDisplayString(void);
+void setDisplayString(const char *format, ...);
+uint32_t clamp(uint32_t value, uint32_t minVal, uint32_t maxVal);
+void setCounterBounds(uint32_t minVal, uint32_t maxVal);
 
 
 #endif /* INC_SETTINGS_H_ */

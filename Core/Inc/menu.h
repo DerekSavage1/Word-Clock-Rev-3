@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include "settings.h"
 
-uint32_t clampValue(uint32_t value, uint32_t minVal, uint32_t maxVal);
 void configureSettings(void);
 
 

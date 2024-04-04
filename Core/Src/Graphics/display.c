@@ -45,3 +45,8 @@ void advanceDisplay() {
     memcpy(currentDisplay, targetDisplay, sizeof(currentDisplay));
     wipeDisplay((LED *) targetDisplay);
 }
+
+void sendDisplayToDMA() {
+	updatePwmBuffer((LED *) currentDisplay);
+	DMA_Send();
+}

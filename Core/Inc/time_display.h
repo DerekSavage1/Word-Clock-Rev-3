@@ -18,5 +18,7 @@ extern const uint16_t *hourBitmaps[];
 extern const uint16_t *minuteBitmaps[];
 
 void display_time(int hour, int minute, RgbColor color);
+void display_birthday(void);
+void display_anniversary(void);
 
 #endif /* INC_TIME_DISPLAY_H_ */

@@ -7,6 +7,7 @@
 "./Core/Src/Graphics/rainbow.o"
 "./Core/Src/Graphics/random.o"
 "./Core/Src/Graphics/time_display.o"
+"./Core/Src/Graphics/twinkle.o"
 "./Core/Src/UI/button.o"
 "./Core/Src/UI/menu.o"
 "./Core/Src/UI/settings.o"

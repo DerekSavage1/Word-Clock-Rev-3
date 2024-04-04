@@ -78,3 +78,23 @@ void display_time(int hour, int minute, RgbColor color) {
         addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, color, FLICKER);
     }
 }
+
+void display_anniversary(void) {
+	RgbColor color;
+	color.r = 5;
+	color.b = 5;
+	color.g = 5;
+	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, color, RAINBOW);
+}
+
+void display_birthday(void) {
+	RgbColor color;
+	color.r = 5;
+	color.b = 5;
+	color.g = 5;
+	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_DEREK, (LED *) currentDisplay, color, RAINBOW);
+}

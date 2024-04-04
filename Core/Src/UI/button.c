@@ -17,13 +17,13 @@ bool checkButtonPress(void) {
     // Check if button state has transitioned from HIGH to LOW.
     if (lastButtonState == GPIO_PIN_SET && currentButtonState == GPIO_PIN_RESET) {
         // Button was pressed - perform actions here.
-    	return true;
+        lastButtonState = currentButtonState; // Update the last button state.
+        return true;
     } else {
-    	return false;
+        // Update the last button state.
+        lastButtonState = currentButtonState;
+        return false;
     }
-
-    // Update the last button state.
-    lastButtonState = currentButtonState;
 }
 
 void switchState() {

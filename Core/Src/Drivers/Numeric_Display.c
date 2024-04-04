@@ -22,6 +22,17 @@ void setSegments(uint8_t segments) {
   HAL_GPIO_WritePin(GPIOA, DP_K_Pin, 	(segments & (1 << 7)) ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
+void wipeSegments(void) {
+  HAL_GPIO_WritePin(GPIOA, SEG_A_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, SEG_B_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, SEG_C_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, SEG_D_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, SEG_E_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, SEG_F_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, SEG_G_K_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, DP_K_Pin, 	GPIO_PIN_SET);
+}
+
 // Activate a single digit
 void activateDigit(uint8_t digit) {
 
@@ -198,6 +209,7 @@ void Segment_Display(const char *input) {
             	setSegments(0x00);
                 break;
         }
-        HAL_Delay(5);
+        HAL_Delay(2);
+        wipeSegments();
     }
 }

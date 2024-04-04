@@ -30,7 +30,7 @@ Core/Src/Graphics/rainbow.o: ../Core/Src/Graphics/rainbow.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Core/Inc/matrix.h
+ ../Core/Inc/matrix.h ../Core/Inc/WS2812B.h
 ../Core/Inc/rainbow.h:
 ../Core/Inc/color.h:
 ../Core/Inc/display.h:
@@ -66,3 +66,4 @@ Core/Src/Graphics/rainbow.o: ../Core/Src/Graphics/rainbow.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Core/Inc/matrix.h:
+../Core/Inc/WS2812B.h:
