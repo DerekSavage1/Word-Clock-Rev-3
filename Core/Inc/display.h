@@ -11,11 +11,12 @@
 #include <ws2812b.h>
 #include "matrix.h"
 #include "color.h"
+#include "settings.h"
 
 extern LED targetDisplay[MATRIX_SIZE];
 extern LED currentDisplay[MATRIX_SIZE];
 
-void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, RgbColor color, Effect effect);
+void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effect effect);
 void advanceDisplay(void);
 void sendDisplayToDMA(void);
 

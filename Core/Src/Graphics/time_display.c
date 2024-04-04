@@ -35,18 +35,19 @@ const uint16_t *minuteBitmaps[] = {
 		MINUTE_THIRTY
 };
 
-void display_time(int hour, int minute, RgbColor color) {
-    addBitmapToDisplay(BMP_ITS, (LED *) targetDisplay, color, FLICKER);
+void display_time(uint8_t hour, uint8_t minute) {
+
+    addBitmapToDisplay(BMP_ITS, (LED *) targetDisplay, FLICKER);
 
     // Round down to the nearest five minutes and determine if it is 'past' or 'to' the hour
     int roundedMinute = (minute / 5) * 5;
     if (roundedMinute > 0) {
         if (roundedMinute < 35) {
-            addBitmapToDisplay(BMP_PAST, (LED *) targetDisplay, color, FLICKER);
+            addBitmapToDisplay(BMP_PAST, (LED *) targetDisplay, FLICKER);
         } else {
             roundedMinute = 60 - roundedMinute;
             hour++;
-            addBitmapToDisplay(BMP_TILL, (LED *) targetDisplay, color, FLICKER);
+            addBitmapToDisplay(BMP_TILL, (LED *) targetDisplay, FLICKER);
         }
     }
 
@@ -55,9 +56,9 @@ void display_time(int hour, int minute, RgbColor color) {
     if(hour == 0 || hour == 12) {
         // It's exactly midnight or noon, so we will handle it in the hour display section.
     } else if (hour < 12) {
-        addBitmapToDisplay(BMP_AM, (LED *) targetDisplay, color, FLICKER);
+        addBitmapToDisplay(BMP_AM, (LED *) targetDisplay, FLICKER);
     } else {
-        addBitmapToDisplay(BMP_PM, (LED *) targetDisplay, color, FLICKER);
+        addBitmapToDisplay(BMP_PM, (LED *) targetDisplay, FLICKER);
     }
 
     // Display the hour, normalizing hour again for 12-hour format with special cases for noon and midnight
@@ -70,12 +71,12 @@ void display_time(int hour, int minute, RgbColor color) {
 
     // Use an array to simplify hour display logic
     if(hour >= 1 && hour <= 12) {
-        addBitmapToDisplay(hourBitmaps[hour % 12], (LED *) targetDisplay, color, FLICKER);
+        addBitmapToDisplay(hourBitmaps[hour % 12], (LED *) targetDisplay, FLICKER);
     }
 
     // Display the minute in intervals of five using an array pointing to the bitmaps
     if (roundedMinute > 0) {
-        addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, color, FLICKER);
+        addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, FLICKER);
     }
 }
 
@@ -84,9 +85,9 @@ void display_anniversary(void) {
 	color.r = 5;
 	color.b = 5;
 	color.g = 5;
-	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, color, RAINBOW);
-	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, color, RAINBOW);
-	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
+	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, RAINBOW);
+	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, RAINBOW);
 }
 
 void display_birthday(void) {
@@ -94,7 +95,7 @@ void display_birthday(void) {
 	color.r = 5;
 	color.b = 5;
 	color.g = 5;
-	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, color, RAINBOW);
-	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, color, RAINBOW);
-	addBitmapToDisplay(BMP_DEREK, (LED *) currentDisplay, color, RAINBOW);
+	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
+	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, RAINBOW);
+	addBitmapToDisplay(BMP_DEREK, (LED *) currentDisplay, RAINBOW);
 }

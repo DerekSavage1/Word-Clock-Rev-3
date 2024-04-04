@@ -20,7 +20,7 @@ void setupRainbow(void) {
 
 	for(uint8_t i = 0; i < size; i++) {
 		lastColor.h++;
-		RgbColor rgb = HsvToRgb(lastColor);
+		RgbColor rgb = hsvToRgb(lastColor);
 		currentDisplay[rainbow[i]].red = rgb.r;
 		currentDisplay[rainbow[i]].blue = rgb.g;
 		currentDisplay[rainbow[i]].green = rgb.b;
@@ -37,13 +37,13 @@ void advanceRainbow(uint8_t brightness) {
 		ledrgb.r = currentDisplay[rainbow[i]].red;
 		ledrgb.b = currentDisplay[rainbow[i]].blue;
 		ledrgb.g = currentDisplay[rainbow[i]].green;
-		HsvColor hsv = RgbToHsv(ledrgb);
+		HsvColor hsv = rgbToHsv(ledrgb);
 
 		hsv.s = 255;
 		hsv.v = brightness;
 		hsv.h++;
 
-		RgbColor rgb = HsvToRgb(hsv);
+		RgbColor rgb = hsvToRgb(hsv);
 		currentDisplay[rainbow[i]].red = rgb.r;
 		currentDisplay[rainbow[i]].blue = rgb.b;
 		currentDisplay[rainbow[i]].green = rgb.g;

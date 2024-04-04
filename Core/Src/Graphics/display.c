@@ -10,8 +10,9 @@
 LED targetDisplay[MATRIX_SIZE];
 LED currentDisplay[MATRIX_SIZE];
 
-void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, RgbColor color, Effect effect) {
+void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effect effect) {
 
+	RgbColor color = getColor();
     //TODO: create function
     // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
 

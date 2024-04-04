@@ -7,6 +7,7 @@
 
 #include "settings.h"
 
+extern LED currentDisplay[];
 extern TIM_HandleTypeDef htim3;
 
 static DeviceState currentState = SLEEP;
@@ -22,6 +23,7 @@ DateType dateState = SYSTEM_DATE;
 char displayStr[MAX_STRING_LENGTH];
 static uint32_t minVal = 0;
 static uint32_t maxVal = 2000; // (2^32 - 1)
+RgbColor color;
 
 #define UNDERFLOW_TRIGGER 65500
 
@@ -48,12 +50,14 @@ void setDeviceState(DeviceState _currentState) {
 }
 
 uint32_t getCounter(void) {
+	setCounter(clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal));
 	return clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal);
 }
 
 uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal) {
 	minVal = _minVal;
 	maxVal = _maxVal;
+	setCounter(clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal));
 	return clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal);
 }
 
@@ -103,10 +107,6 @@ uint8_t getBrightness(void) {
 	return brightness;
 }
 
-void setBrightness(uint8_t _brightness) {
-	brightness = _brightness;
-}
-
 void setMode(Mode _mode) {
 	mode = _mode;
 }
@@ -124,4 +124,142 @@ void setDisplayString(const char *format, ...) {
     va_start(args, format);
     vsnprintf(displayStr, MAX_STRING_LENGTH, format, args);
     va_end(args);
+}
+
+void setColorWithPreset(uint32_t preset) {
+    switch (preset) {
+        case 1:
+            color.r = 255; // r
+            color.g = 0;
+            color.b = 0;
+            break;
+        case 2:
+            color.r = 255; // Orange
+            color.g = 165;
+            color.b = 0;
+            break;
+        case 3:
+            color.r = 255; // Yellow
+            color.g = 255;
+            color.b = 0;
+            break;
+        case 4:
+            color.r = 0; // g
+            color.g = 255;
+            color.b = 0;
+            break;
+        case 5:
+            color.r = 0; // b
+            color.g = 0;
+            color.b = 255;
+            break;
+        case 6:
+            color.r = 75; // Indigo
+            color.g = 0;
+            color.b = 130;
+            break;
+        case 7:
+            color.r = 128; // Violet
+            color.g = 0;
+            color.b = 128;
+            break;
+        case 8:
+            color.r = 255; // r-Orange
+            color.g = 69;
+            color.b = 0;
+            break;
+        case 9:
+            color.r = 255; // Orange-Yellow
+            color.g = 215;
+            color.b = 0;
+            break;
+        case 10:
+            color.r = 154; // Yellow-g
+            color.g = 205;
+            color.b = 50;
+            break;
+        case 11:
+            color.r = 0; // g-b
+            color.g = 255;
+            color.b = 255;
+            break;
+        case 12:
+            color.r = 138; // b-Indigo
+            color.g = 43;
+            color.b = 226;
+            break;
+        case 13:
+            color.r = 186; // Indigo-Violet
+            color.g = 85;
+            color.b = 211;
+            break;
+        case 14:
+            color.r = 255; // Violet-r
+            color.g = 0;
+            color.b = 255;
+            break;
+        case 15:
+            color.r = 255; // Pink
+            color.g = 192;
+            color.b = 203;
+            break;
+        case 16:
+            color.r = 255; // White
+            color.g = 255;
+            color.b = 255;
+            break;
+        default:
+            color.r = 255; // White for an undefined preset
+            color.g = 255;
+            color.b = 255;
+    }
+
+    //workaround because otherwise the color would only update when display_time is called, which is currently only while flickering
+    uint8_t leds[MATRIX_SIZE];
+
+    uint32_t size = getLEDsWithEffect((uint8_t *) leds, (LED *) currentDisplay, FLICKER);
+
+    for(int i = 0; i < size; i++) {
+		currentDisplay[leds[i]].red = color.r;
+		currentDisplay[leds[i]].blue = color.g;
+		currentDisplay[leds[i]].green = color.b;
+    }
+
+    size = getLEDsWithEffect((uint8_t *) leds, (LED *) currentDisplay, TWINKLE);
+
+    for(int i = 0; i < size; i++) {
+		currentDisplay[leds[i]].red = color.r;
+		currentDisplay[leds[i]].blue = color.g;
+		currentDisplay[leds[i]].green = color.b;
+    }
+
+
+}
+
+void setBrightness(uint32_t _brightness) {
+
+	HsvColor hsv = rgbToHsv(color);
+
+	hsv.v = (_brightness * 255) / 100;
+
+	color = hsvToRgb(hsv);
+
+    uint8_t leds[MATRIX_SIZE];
+
+    uint32_t size = getLEDsWithEffect((uint8_t *) leds, (LED *) currentDisplay, FLICKER);
+
+    for(int i = 0; i < size; i++) {
+		currentDisplay[leds[i]].red = color.r;
+		currentDisplay[leds[i]].blue = color.g;
+		currentDisplay[leds[i]].green = color.b;
+    }
+
+    size = getLEDsWithEffect((uint8_t *) leds, (LED *) currentDisplay, TWINKLE);
+
+    for(int i = 0; i < size; i++) {
+		currentDisplay[leds[i]].red = color.r;
+		currentDisplay[leds[i]].blue = color.g;
+		currentDisplay[leds[i]].green = color.b;
+    }
+
 }

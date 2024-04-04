@@ -7,7 +7,7 @@
 
 #include "color.h"
 
-RgbColor HsvToRgb(HsvColor hsv)
+RgbColor hsvToRgb(HsvColor hsv)
 {
     RgbColor rgb;
     unsigned char region, remainder, p, q, t;
@@ -52,7 +52,7 @@ RgbColor HsvToRgb(HsvColor hsv)
     return rgb;
 }
 
-HsvColor RgbToHsv(RgbColor rgb)
+HsvColor rgbToHsv(RgbColor rgb)
 {
     HsvColor hsv;
     unsigned char rgbMin, rgbMax;

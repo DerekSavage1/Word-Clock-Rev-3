@@ -123,11 +123,8 @@ int main(void)
 
   HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-  RgbColor color;
-  color.r = 5;
-  color.g = 5;
-  color.b = 5;
-  display_time(sTime.Hours, sTime.Minutes, color);
+  setColorWithPreset(0);
+  display_time(sTime.Hours, sTime.Minutes);
   advanceDisplay();
   /* USER CODE END 2 */
 
@@ -154,20 +151,20 @@ int main(void)
 
 	Segment_Display(getDisplayString());
 
-	display_birthday();
+//	display_birthday();
 
-	rainbow(5);
-	twinkle();
+//	rainbow(5);
+//	twinkle();
 
 	checkUpdateTime(sTime);
 	updateDisplay(sTime);
 
 //	setAnniversary(5);
 
-	if(HAL_GetTick() - lastTick > 1000) {
-		sTime.Minutes = sTime.Minutes + 1;
-		lastTick = HAL_GetTick();
-	}
+//	if(HAL_GetTick() - lastTick > 1000) {
+//		sTime.Minutes = sTime.Minutes + 1;
+//		lastTick = HAL_GetTick();
+//	}
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 	HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);

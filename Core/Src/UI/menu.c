@@ -44,16 +44,18 @@ void configureSettings(void) {
 		    getDate(getDateState())->Date = (uint8_t) getCounterWithinBounds(0, 31);
 			break;
 		case SET_YEAR:
-			setDisplayString("20%02d", getTime()->Hours, getCounterWithinBounds(0, 99));
+			setDisplayString("20%02d", getCounterWithinBounds(0, 99));
 		    getDate(getDateState())->Year = (uint8_t) getCounterWithinBounds(0, 99);
 			break;
 		case SET_COLOR:
-			setDisplayString("COLOR");
+			setDisplayString("%02d", getCounterWithinBounds(0, 16));
+			setColorWithPreset(getCounterWithinBounds(0, 16));
 			setCounter(getCounterWithinBounds(0, 16)); //16 color presets
 			break;
 		case SET_BRIGHTNESS:
-			setDisplayString("BRIGHT");
-			setCounter(getCounterWithinBounds(0, 255));
+			setDisplayString("%02d", getCounterWithinBounds(1, 100));
+			setBrightness(getCounterWithinBounds(1, 100));
+			setCounter(getCounterWithinBounds(1, 100)); //16 color presets
 			break;
 		default:
 			break;

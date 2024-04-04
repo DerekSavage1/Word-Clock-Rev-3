@@ -32,11 +32,7 @@ void updateDisplay(RTC_TimeTypeDef currentTime) {
             isFlickering = flickerOut(); // This function automatically resets its state when done
             if (!isFlickering) { // Assume you have a way to check if flickering out has finished
                 currentFlickerState = STATE_FLICKER_IN; // Proceed to flicker in the new display
-                RgbColor color;
-                color.r = 5;
-                color.g = 5;
-                color.b = 5;
-                display_time(currentTime.Hours, currentTime.Minutes, color); // Update the nextFrame for flicker in
+                display_time(currentTime.Hours, currentTime.Minutes); // Update the nextFrame for flicker in
                 advanceDisplay();
             }
 
