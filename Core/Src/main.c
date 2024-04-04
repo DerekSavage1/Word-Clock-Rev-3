@@ -141,8 +141,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	setCounter(__HAL_TIM_GET_COUNTER(&htim3));
-
 	if(checkButtonPress()){
 		switchState();
 	}

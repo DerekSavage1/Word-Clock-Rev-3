@@ -20,11 +20,15 @@ extern RTC_DateTypeDef bDate;
 uint8_t brightness = 50;
 DateType dateState = SYSTEM_DATE;
 char displayStr[MAX_STRING_LENGTH];
-uint32_t minVal = 0;
-uint32_t maxVal = 4294967295; // (2^32 - 1)
+static uint32_t minVal = 0;
+static uint32_t maxVal = 2000; // (2^32 - 1)
+
+#define UNDERFLOW_TRIGGER 65500
 
 uint32_t clamp(uint32_t value, uint32_t minVal, uint32_t maxVal) {
-	// Normal range (does not wrap around)
+
+	if(value > UNDERFLOW_TRIGGER) return minVal;
+
 	if (value < minVal) return minVal;
 	if (value > maxVal) return maxVal;
 	return value;
@@ -44,19 +48,18 @@ void setDeviceState(DeviceState _currentState) {
 }
 
 uint32_t getCounter(void) {
-	return clamp(counter, minVal, maxVal);
+	return clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal);
+}
+
+uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal) {
+	minVal = _minVal;
+	maxVal = _maxVal;
+	return clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal);
 }
 
 void setCounter(uint32_t _counter) {
-
-    if (_counter > maxVal) {
-        counter = minVal;
-    } else {
-        counter = clamp(_counter, minVal, maxVal);
-    }
-
 	counter = clamp(_counter, minVal, maxVal);
-	__HAL_TIM_SET_COUNTER(&htim3, counter);
+	__HAL_TIM_SET_COUNTER(&htim3, clamp(_counter, minVal, maxVal));
 }
 
 uint32_t getSelected(void) {

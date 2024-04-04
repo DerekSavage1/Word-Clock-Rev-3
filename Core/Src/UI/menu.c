@@ -9,16 +9,12 @@
 
 void configureSettings(void) {
 
-	uint32_t counter = getCounter();
-
 	switch(getDeviceState()) {
 		case SLEEP:
-			setCounterBounds(0,50);
-			setDisplayString("%d", getCounter());
+			setDisplayString("%d", getCounterWithinBounds(0, 50));
 			break;
 		case WAKE:
-			setCounterBounds(0,1);
-			if(getCounter()) {
+			if(getCounterWithinBounds(0, 1)) {
 				setDisplayString("SET");
 				setMode(SET_MODE);
 			} else {
@@ -27,45 +23,40 @@ void configureSettings(void) {
 			}
 			break;
 		case SELECT:
-			setDisplayString("SELE");
-			counter = clamp(counter, 0, 3);
+			setDisplayString("%d", getCounterWithinBounds(0, 3));
 			break;
 		case SET_HOURS:
-			setDisplayString("HOUR");
-		    setCounter(clamp(counter, 0, 23)); //23 hours
-		    getTime()->Hours = (uint8_t) (getSelected());
+			setDisplayString("%02d%02d", getCounterWithinBounds(0, 23), getTime()->Minutes);
+		    getTime()->Hours = (uint8_t) getCounterWithinBounds(0, 23);
 			break;
 		case SET_MINUTES:
-			setDisplayString("MINUTES");
-		    setCounter(clamp(counter, 0, 59)); //23 hours
-		    getTime()->Minutes = (uint8_t) (getSelected());
+			setDisplayString("%02d%02d", getTime()->Hours, getCounterWithinBounds(0, 59));
+		    getTime()->Minutes = (uint8_t) getCounterWithinBounds(0, 59);
 			break;
 		case SET_MONTH:
-			//check which month
-			setDisplayString("MONTH");
-		    setCounter(clamp(counter, 0, 12)); //12 months
-		    getDate(getDateState())->Month = (uint8_t) (getSelected());
+			getCounterWithinBounds(0, 12);
+			setDisplayString("%02d%02d", getCounterWithinBounds(0, 12), getDate(getDateState())->Date);
+		    getDate(getDateState())->Month = (uint8_t) getCounterWithinBounds(0, 12);
 			break;
 		case SET_DAY:
-			setDisplayString("DAY");
-		    setCounter(clamp(counter, 0, 31)); //31 days
+			setDisplayString("%02d%02d", getDate(getDateState())->Month, getCounterWithinBounds(0, 31));
 		    //FIXME: user could enter February 31 which is wrong
-		    getDate(getDateState())->Date = (uint8_t) (getSelected());
+		    getDate(getDateState())->Date = (uint8_t) getCounterWithinBounds(0, 31);
 			break;
 		case SET_YEAR:
-			setDisplayString("YEAR");
-		    setCounter(clamp(counter, 0, 3000)); //12 months
-		    getDate(getDateState())->Year = (uint8_t) (getSelected());
+			setDisplayString("20%02d", getTime()->Hours, getCounterWithinBounds(0, 99));
+		    getDate(getDateState())->Year = (uint8_t) getCounterWithinBounds(0, 99);
 			break;
 		case SET_COLOR:
 			setDisplayString("COLOR");
-			setCounter(clamp(counter, 0, 16)); //16 color presets
+			setCounter(getCounterWithinBounds(0, 16)); //16 color presets
 			break;
 		case SET_BRIGHTNESS:
 			setDisplayString("BRIGHT");
-			setCounter(clamp(counter, 1, 255));
+			setCounter(getCounterWithinBounds(0, 255));
 			break;
 		default:
 			break;
 	}
+
 }

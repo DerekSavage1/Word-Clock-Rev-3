@@ -33,10 +33,9 @@ void switchState() {
             break;
         case WAKE:
             setDeviceState(SELECT);
-
             break;
         case SELECT:
-        	switch(getSelected()){
+        	switch(getCounterWithinBounds(0, 3)){
         	case 0:
         		setCounter(getTime()->Hours);
         		setDeviceState(SET_HOURS);

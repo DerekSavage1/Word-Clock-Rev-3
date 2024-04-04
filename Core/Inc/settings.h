@@ -57,6 +57,7 @@ RTC_DateTypeDef* getDate(DateType type);
 void setDateState(DateType _dateState);
 uint8_t getBrightness(void);
 void setBrightness(uint8_t _brightness);
+uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal);
 uint32_t getCounter(void);
 void setMode(Mode _mode);
 Mode getMode(void);
