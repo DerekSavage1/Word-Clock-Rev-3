@@ -1,6 +1,6 @@
 # Word Clock
 
-![Test Bench](/TestBench.jpeg)
+![Test Bench](Assets/TestBench.jpeg)
 
 ## Overview
 
@@ -32,7 +32,7 @@ This project uses a matrix of indiviually controllable letters to spell out time
 6. **Prepare Back Panel**: To accommodate the 7 segment display, the rotary encoder, and the USB-C, the back panel requires laser cutting. I will provide the SVG file used for this purpose shortly.
 7. **Assemble**: Commence with a 9x9 diffusion paper layer, followed by the PCB with letters facing the glass, and finally secure the back panel in place.
 
-![Assembled Clock](/Assembled.jpeg)
+![Assembled Clock](Assets/Assembled.jpeg)
 
 ### Operation
 
