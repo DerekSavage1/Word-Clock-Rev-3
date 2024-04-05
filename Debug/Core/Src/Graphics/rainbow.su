@@ -1,3 +1,0 @@
-../Core/Src/Graphics/rainbow.c:17:6:setupRainbow	168	static
-../Core/Src/Graphics/rainbow.c:31:6:advanceRainbow	184	static
-../Core/Src/Graphics/rainbow.c:54:6:rainbow	16	static

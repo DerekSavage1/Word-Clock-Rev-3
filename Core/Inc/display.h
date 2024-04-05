@@ -17,7 +17,9 @@ extern LED targetDisplay[MATRIX_SIZE];
 extern LED currentDisplay[MATRIX_SIZE];
 
 void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effect effect);
-void advanceDisplay(void);
+void advanceDisplay(Effect effect);
 void sendDisplayToDMA(void);
+void updateDisplayColor(void);
+void removeBitmapFromDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display);
 
 #endif /* INC_DISPLAY_H_ */

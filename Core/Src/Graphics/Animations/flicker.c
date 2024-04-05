@@ -16,6 +16,9 @@ void checkUpdateTime(RTC_TimeTypeDef currentTime) {
     // Check if minute ends in 5 and is different from the previous time
     if ((currentTime.Minutes % 5 == 0) && ((currentTime.Minutes != previousDisplayedTime.Minutes) || (currentTime.Hours != previousDisplayedTime.Hours))) {
         needToUpdateDisplay = true;
+    } else if(currentTime.Hours != previousDisplayedTime.Hours) {
+        needToUpdateDisplay = true;
+
     }
 }
 
@@ -33,7 +36,7 @@ void updateDisplay(RTC_TimeTypeDef currentTime) {
             if (!isFlickering) { // Assume you have a way to check if flickering out has finished
                 currentFlickerState = STATE_FLICKER_IN; // Proceed to flicker in the new display
                 display_time(currentTime.Hours, currentTime.Minutes); // Update the nextFrame for flicker in
-                advanceDisplay();
+                advanceDisplay(FLICKER);
             }
 
             break;
@@ -42,7 +45,9 @@ void updateDisplay(RTC_TimeTypeDef currentTime) {
             if (!isFlickering) { // Assume you have a way to check if flickering in has finished
                 currentFlickerState = STATE_IDLE; // Go back to idle state
                 needToUpdateDisplay = false;
-                previousDisplayedTime = currentTime; // Update the time once the whole effect is done
+                previousDisplayedTime = currentTime;
+
+                //FIXME: spinning the dial quickly illuminates multiple hours
             }
             break;
         default:

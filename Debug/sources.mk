@@ -39,6 +39,7 @@ CPP_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Core/Src/Drivers \
+Core/Src/Graphics/Animations \
 Core/Src/Graphics \
 Core/Src/UI \
 Core/Src \

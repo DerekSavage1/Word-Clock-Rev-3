@@ -80,6 +80,22 @@ void display_time(uint8_t hour, uint8_t minute) {
     }
 }
 
+void display_date() {
+    if(getDate(SYSTEM_DATE)->Month == getDate(BIRTHDAY_DATE)->Month
+    		&& getDate(SYSTEM_DATE)->Date == getDate(BIRTHDAY_DATE)->Date) {
+    	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
+    	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, RAINBOW);
+    	addBitmapToDisplay(BMP_KATIE, (LED *) currentDisplay, RAINBOW);
+    }
+
+    if(getDate(SYSTEM_DATE)->Month == getDate(ANNIVERSARY_DATE)->Month
+    		&& getDate(SYSTEM_DATE)->Date == getDate(ANNIVERSARY_DATE)->Date) {
+    	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
+    	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, RAINBOW);
+    	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, RAINBOW);
+    }
+}
+
 void display_anniversary(void) {
 	RgbColor color;
 	color.r = 5;

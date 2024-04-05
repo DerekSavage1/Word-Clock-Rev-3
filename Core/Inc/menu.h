@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "settings.h"
+#include "blink.h"
 
 void configureSettings(void);
 

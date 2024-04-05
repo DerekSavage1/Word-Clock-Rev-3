@@ -25,6 +25,9 @@ RgbColor adjustBrightness(RgbColor color) {
     newColor.g = (uint8_t) newGreen;
     newColor.b = (uint8_t) newBlue;
 
+	updatePwmBuffer((LED *) currentDisplay);
+	DMA_Send();
+
     return newColor;
 }
 

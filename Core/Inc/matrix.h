@@ -46,6 +46,16 @@
 #define BMP_PM              (bitmap[27])
 #define BMP_DEREK           (bitmap[28])
 #define BMP_KATIE           (bitmap[29])
+#define MINUTE_ONE          (bitmap[30])
+#define MINUTE_TWO          (bitmap[31])
+#define MINUTE_THREE		(bitmap[32])
+#define MINUTE_FOUR         (bitmap[33])
+#define MENU_SET         	(bitmap[34])
+#define MENU_DELETE         (bitmap[35])
+#define MENU_TIME         	(bitmap[36])
+#define MENU_COLOR         	(bitmap[37])
+#define MENU_BIRTHDAY       (bitmap[38])
+#define MENU_ANNIVERSARY    (bitmap[39])
 
 extern const uint16_t bitmap[][MATRIX_HEIGHT];
 

@@ -57,6 +57,7 @@ void Segment_Display(const char *input) {
 		char ch = truncatedInput[i];
         switch(ch) {
         	case '\0':
+        		wipeSegments();
         		return;
             case '0':
                 setSegments(0x3F);
@@ -206,7 +207,7 @@ void Segment_Display(const char *input) {
             	setSegments(0x04);
             	break;
             default:
-            	setSegments(0x00);
+            	wipeSegments();
                 break;
         }
         HAL_Delay(2);

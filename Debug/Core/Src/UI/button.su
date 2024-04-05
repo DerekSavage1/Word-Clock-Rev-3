@@ -1,2 +1,2 @@
 ../Core/Src/UI/button.c:10:6:checkButtonPress	16	static
-../Core/Src/UI/button.c:29:6:switchState	8	static
+../Core/Src/UI/button.c:29:6:switchState	16	static

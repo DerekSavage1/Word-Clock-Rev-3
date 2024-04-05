@@ -1,0 +1,4 @@
+../Core/Src/Graphics/Animations/flicker.c:15:6:checkUpdateTime	5
+../Core/Src/Graphics/Animations/flicker.c:25:6:updateDisplay	8
+../Core/Src/Graphics/Animations/flicker.c:58:6:flickerOut	8
+../Core/Src/Graphics/Animations/flicker.c:102:6:flickerIn	8

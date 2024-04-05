@@ -30,35 +30,94 @@ void switchState() {
     switch(getDeviceState()) {
         case SLEEP:
             setDeviceState(WAKE);
+        	setCounter(0);
             break;
         case WAKE:
             setDeviceState(SELECT);
+        	setCounter(0);
             break;
         case SELECT:
-        	switch(getCounterWithinBounds(0, 3)){
-        	case 0:
-        		setCounter(getTime()->Hours);
+        	switch(3-getCounterWithinBounds(0, 3)){
+        	case 3:
+
+				addBitmapToDisplay(MENU_TIME, (LED *) currentDisplay, CONSTANT);
+				if(getMode() == SET_MODE) {
+					addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_DELETE, currentDisplay);
+				} else {
+					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_SET, currentDisplay);
+				}
+
+				setCounter(getTime()->Hours);
         		setDeviceState(SET_HOURS);
-        		break;
-        	case 1:
-        		setDeviceState(SET_COLOR);
-        		setCounter(16); //16 presets
+
         		break;
         	case 2:
-        		setDateState(ANNIVERSARY_DATE);
-            	setCounter(getDate(ANNIVERSARY_DATE)->Month);
-            	setDeviceState(SET_MONTH);
+
+				addBitmapToDisplay(MENU_COLOR, (LED *) currentDisplay, CONSTANT);
+				if(getMode() == SET_MODE) {
+					addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_DELETE, currentDisplay);
+				} else {
+					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_SET, currentDisplay);
+				}
+				removeBitmapFromDisplay(MENU_COLOR, currentDisplay);
+				removeBitmapFromDisplay(MENU_ANNIVERSARY, currentDisplay);
+				removeBitmapFromDisplay(MENU_TIME, currentDisplay);
+
+				setCounter(getColorPreset());
+        		setDeviceState(SET_COLOR);
+
         		break;
-        	case 3:
-        		setDateState(BIRTHDAY_DATE);
-            	setCounter(getDate(BIRTHDAY_DATE)->Month);
-            	setDeviceState(SET_MONTH);
+        	case 1:
+
+
+				addBitmapToDisplay(MENU_BIRTHDAY, (LED *) currentDisplay, CONSTANT);
+				if(getMode() == SET_MODE) {
+					addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_DELETE, currentDisplay);
+	        		setDateState(BIRTHDAY_DATE);
+	            	setCounter(getDate(BIRTHDAY_DATE)->Month);
+	            	setDeviceState(SET_MONTH);
+				} else {
+					deleteBirthday();
+					setDeviceState(SLEEP);
+					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_SET, currentDisplay);
+				}
+				removeBitmapFromDisplay(MENU_TIME, currentDisplay);
+				removeBitmapFromDisplay(MENU_ANNIVERSARY, currentDisplay);
+
+
+        		break;
+        	case 0:
+
+
+				addBitmapToDisplay(MENU_ANNIVERSARY, (LED *) currentDisplay, CONSTANT);
+				if(getMode() == SET_MODE) {
+					addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_DELETE, currentDisplay);
+	        		setDateState(ANNIVERSARY_DATE);
+	            	setCounter(getDate(ANNIVERSARY_DATE)->Month);
+	            	setDeviceState(SET_MONTH);
+				} else {
+					deleteAnniversary();
+					setDeviceState(SLEEP);
+					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
+					removeBitmapFromDisplay(MENU_SET, currentDisplay);
+				}
+				removeBitmapFromDisplay(MENU_COLOR, currentDisplay);
+				removeBitmapFromDisplay(MENU_BIRTHDAY, currentDisplay);
+
         		break;
         	default:
         		break;
         	}
             break;
         case SET_HOURS:
+
         	setCounter(getTime()->Minutes);
             setDeviceState(SET_MINUTES);
             break;
@@ -66,18 +125,33 @@ void switchState() {
         	setCounter(getDate(SYSTEM_DATE)->Month);
             setDeviceState(SET_MONTH);
             break;
-        case SET_MONTH:
+        case SET_MONTH:;
+        	RTC_DateTypeDef nDate = *getDate(getDateState());
+        	nDate.Month = (uint8_t) getCounter();
+        	setDate(nDate, getDateState());
         	setCounter(getDate(getDateState())->Date);
+
         	setDeviceState(SET_DAY);
+
         	break;
         case SET_DAY:
-        	setCounter(getDate(getDateState())->Year);
+        	nDate = *getDate(getDateState());
+        	nDate.Date = (uint8_t) getCounter();
+        	setDate(nDate, getDateState());
+        	if (getDateState() != SYSTEM_DATE) {
+        		setDeviceState(SLEEP);
+        		return;
+        	}
         	setDeviceState(SET_YEAR);
         	break;
         case SET_YEAR:
+        	nDate = *getDate(getDateState());
+        	nDate.Year = (uint8_t) getCounter();
+        	setDate(nDate, getDateState());
         	setDeviceState(SLEEP);
         	break;
         case SET_COLOR:
+        	setCounterBounds(0,100);
         	setCounter(getBrightness());
             setDeviceState(SET_BRIGHTNESS); // After color, set brightness
             break;

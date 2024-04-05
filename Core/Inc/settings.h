@@ -58,7 +58,7 @@ DateType getDateState(void);
 RTC_DateTypeDef* getDate(DateType type);
 void setDateState(DateType _dateState);
 uint8_t getBrightness(void);
-void setBrightness(uint32_t _brightness);
+void setBrightness(uint8_t _brightness);
 uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal);
 uint32_t getCounter(void);
 void setMode(Mode _mode);
@@ -70,6 +70,12 @@ uint32_t clamp(uint32_t value, uint32_t minVal, uint32_t maxVal);
 void setCounterBounds(uint32_t minVal, uint32_t maxVal);
 void setColorWithPreset(uint32_t preset);
 RgbColor getColor(void);
+void setDate(RTC_DateTypeDef tDate, DateType type);
+uint8_t getColorPreset(void);
+bool isAnniversarySet(void);
+bool isBirthdaySet(void);
+void deleteBirthday(void);
+void deleteAnniversary(void);
 
 
 #endif /* INC_SETTINGS_H_ */

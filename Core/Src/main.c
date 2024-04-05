@@ -36,6 +36,8 @@
 #include "settings.h"
 #include "rainbow.h"
 #include "twinkle.h"
+#include "blink.h"
+#include "constant.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,9 +64,9 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 /* USER CODE BEGIN PV */
 
 RTC_TimeTypeDef sTime;
-RTC_DateTypeDef sDate;
-RTC_DateTypeDef aDate;
-RTC_DateTypeDef bDate;
+RTC_DateTypeDef sDate = {0, 0, 0, 24};
+RTC_DateTypeDef aDate = {0, 0, 0, 99};
+RTC_DateTypeDef bDate = {0, 0, 0, 99};
 
 uint32_t lastTick = 0;
 
@@ -125,7 +127,7 @@ int main(void)
   HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
   setColorWithPreset(0);
   display_time(sTime.Hours, sTime.Minutes);
-  advanceDisplay();
+  advanceDisplay(FLICKER);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,13 +153,19 @@ int main(void)
 
 	Segment_Display(getDisplayString());
 
-//	display_birthday();
 
-//	rainbow(5);
-//	twinkle();
 
 	checkUpdateTime(sTime);
 	updateDisplay(sTime);
+
+
+	rainbow(5);
+	twinkle();
+	blink();
+	constant();
+
+
+	display_time(sTime.Hours, sTime.Minutes);
 
 //	setAnniversary(5);
 
