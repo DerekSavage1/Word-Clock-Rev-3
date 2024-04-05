@@ -1,6 +1,8 @@
 ../Core/Src/Graphics/display.c:13:6:addBitmapToDisplay	40	static
-../Core/Src/Graphics/display.c:35:6:removeBitmapFromDisplay	32	static
-../Core/Src/Graphics/display.c:58:6:updateDisplayColor	24	static
-../Core/Src/Graphics/display.c:82:6:wipeDisplay	24	static
-../Core/Src/Graphics/display.c:91:6:advanceDisplay	24	static
-../Core/Src/Graphics/display.c:106:6:sendDisplayToDMA	8	static
+../Core/Src/Graphics/display.c:34:6:removeBitmapFromDisplay	32	static
+../Core/Src/Graphics/display.c:57:6:displaysAreDifferent	24	static
+../Core/Src/Graphics/display.c:74:10:getChangedPixels	24	static
+../Core/Src/Graphics/display.c:95:6:updateDisplayColor	24	static
+../Core/Src/Graphics/display.c:119:6:wipeDisplay	24	static
+../Core/Src/Graphics/display.c:128:6:advanceDisplay	24	static
+../Core/Src/Graphics/display.c:143:6:sendDisplayToDMA	8	static

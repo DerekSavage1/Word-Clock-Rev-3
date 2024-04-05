@@ -122,12 +122,7 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Start the encoder interface
-
-  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
   setColorWithPreset(0);
-  display_time(sTime.Hours, sTime.Minutes);
-  advanceDisplay(FLICKER);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -155,7 +150,6 @@ int main(void)
 
 
 
-	checkUpdateTime(sTime);
 	updateDisplay(sTime);
 
 
@@ -163,9 +157,6 @@ int main(void)
 	twinkle();
 	blink();
 	constant();
-
-
-	display_time(sTime.Hours, sTime.Minutes);
 
 //	setAnniversary(5);
 

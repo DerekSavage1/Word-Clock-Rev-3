@@ -1,4 +1,3 @@
-../Core/Src/Graphics/Animations/flicker.c:15:6:checkUpdateTime	8	static
-../Core/Src/Graphics/Animations/flicker.c:25:6:updateDisplay	16	static
-../Core/Src/Graphics/Animations/flicker.c:58:6:flickerOut	16	static
-../Core/Src/Graphics/Animations/flicker.c:102:6:flickerIn	16	static
+../Core/Src/Graphics/Animations/flicker.c:15:6:updateDisplay	16	static
+../Core/Src/Graphics/Animations/flicker.c:46:6:flickerOut	16	static
+../Core/Src/Graphics/Animations/flicker.c:91:6:flickerIn	16	static

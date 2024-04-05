@@ -37,6 +37,7 @@ const uint16_t *minuteBitmaps[] = {
 
 void display_time(uint8_t hour, uint8_t minute) {
 
+	wipeDisplay((LED *) targetDisplay);
     addBitmapToDisplay(BMP_ITS, (LED *) targetDisplay, FLICKER);
 
     // Round down to the nearest five minutes and determine if it is 'past' or 'to' the hour

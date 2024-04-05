@@ -13,8 +13,6 @@ LED currentDisplay[MATRIX_SIZE];
 void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effect effect) {
 
 	RgbColor color = getColor();
-    //TODO: create function
-    // applyBrightness((uint8_t*) red, (uint8_t*) green, (uint8_t*) blue, brightness);
 
     for(int i = 0; i < MATRIX_HEIGHT; i++) {
         for(int j = 0; j < MATRIX_WIDTH; j++) {
@@ -26,6 +24,7 @@ void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effe
             	display[ledNumber].green = color.g;
             	display[ledNumber].blue = color.b;
             	display[ledNumber].effect = effect;
+            	display[ledNumber].on = true;
             }
 
         }
@@ -54,6 +53,44 @@ void removeBitmapFromDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display)
         }
     }
 }
+
+bool displaysAreDifferent(Effect effect) {
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+    	if(targetDisplay[i].effect != effect && currentDisplay[i].effect != effect) {
+    		continue;
+    	}
+
+		if(currentDisplay[i].red != targetDisplay[i].red
+				|| currentDisplay[i].green != targetDisplay[i].green
+				|| currentDisplay[i].blue != targetDisplay[i].blue
+				|| currentDisplay[i].effect != targetDisplay[i].effect
+				|| currentDisplay[i].on != targetDisplay[i].on) {
+			return true;
+    	}
+    }
+    return false;
+}
+uint32_t getChangedPixels(uint8_t *result, Effect effect) {
+    uint32_t changedPixels = 0;
+
+    for(int i = 0; i < MATRIX_SIZE; i++) {
+
+        if(currentDisplay[i].red != targetDisplay[i].red
+           || currentDisplay[i].green != targetDisplay[i].green
+           || currentDisplay[i].blue != targetDisplay[i].blue
+           || currentDisplay[i].on != targetDisplay[i].on) {
+        	if(targetDisplay[i].effect == effect
+        			||currentDisplay[i].effect == effect); {
+                result[changedPixels] = i;
+                changedPixels++;
+        	}
+        }
+    }
+
+    return changedPixels;
+}
+
 
 void updateDisplayColor(void) {
 

@@ -12,42 +12,28 @@ static RTC_TimeTypeDef previousDisplayedTime = {0}; // Initialize to some value
 bool needToUpdateDisplay = true;
 bool isFlickering = false;
 
-void checkUpdateTime(RTC_TimeTypeDef currentTime) {
-    // Check if minute ends in 5 and is different from the previous time
-    if ((currentTime.Minutes % 5 == 0) && ((currentTime.Minutes != previousDisplayedTime.Minutes) || (currentTime.Hours != previousDisplayedTime.Hours))) {
-        needToUpdateDisplay = true;
-    } else if(currentTime.Hours != previousDisplayedTime.Hours) {
-        needToUpdateDisplay = true;
-
-    }
-}
-
 void updateDisplay(RTC_TimeTypeDef currentTime) {
-    // Call flicker effects based on the state
+
+	display_time(currentTime.Hours, currentTime.Minutes);
+
+	if(displaysAreDifferent(FLICKER) && currentFlickerState != STATE_FLICKER_IN) {
+		currentFlickerState = STATE_FLICKER_OUT;
+	}
+
     switch (currentFlickerState) {
         case STATE_IDLE:
-            if (needToUpdateDisplay) {
-                currentFlickerState = STATE_FLICKER_OUT; // Start the flicker out effect
-            }
-
             break;
         case STATE_FLICKER_OUT:
-            isFlickering = flickerOut(); // This function automatically resets its state when done
-            if (!isFlickering) { // Assume you have a way to check if flickering out has finished
-                currentFlickerState = STATE_FLICKER_IN; // Proceed to flicker in the new display
-                display_time(currentTime.Hours, currentTime.Minutes); // Update the nextFrame for flicker in
-                advanceDisplay(FLICKER);
+            isFlickering = flickerOut();
+            if (!isFlickering) {
+                currentFlickerState = STATE_FLICKER_IN;
             }
-
             break;
         case STATE_FLICKER_IN:
-        	isFlickering = flickerIn(); // This function automatically resets its state when done
-            if (!isFlickering) { // Assume you have a way to check if flickering in has finished
-                currentFlickerState = STATE_IDLE; // Go back to idle state
-                needToUpdateDisplay = false;
+        	isFlickering = flickerIn();
+            if (!isFlickering) {
+                currentFlickerState = STATE_IDLE;
                 previousDisplayedTime = currentTime;
-
-                //FIXME: spinning the dial quickly illuminates multiple hours
             }
             break;
         default:
@@ -58,41 +44,42 @@ void updateDisplay(RTC_TimeTypeDef currentTime) {
 uint32_t lastTickFlicker;
 
 bool flickerOut(void) {
-    static uint8_t litLEDs[MATRIX_SIZE] = {0};
+    static uint8_t ledsToFlickerOff[MATRIX_SIZE] = {0};
     static uint8_t numLit = 0;
     static uint32_t lastTickEffect = 0;
     static uint8_t loop = 0;
     static bool isInitialized = false;
     const uint8_t flickerLoops = 10;
-    const uint32_t delayInterval = 50; // milliseconds
+    const uint32_t delayIntervalMs = 50;
 
     if (!isInitialized) {
-        numLit = getLEDsWithEffect(litLEDs, (LED *) currentDisplay, FLICKER);
+    	numLit = getChangedPixels(ledsToFlickerOff, FLICKER);
+        numLit = getLEDsWithEffect(ledsToFlickerOff, (LED *) currentDisplay, FLICKER);
         if (numLit == 0) {
-            return true; // Function did not start flickering, return false
+            return false; // Function did not start flickering, return false
         }
         loop = 0;
         lastTickEffect = HAL_GetTick();
         isInitialized = true;
     }
 
-    if ((HAL_GetTick() - lastTickEffect) >= delayInterval) {
+    if ((HAL_GetTick() - lastTickEffect) >= delayIntervalMs) {
         if (loop >= flickerLoops) {
             // Ensure all LEDs are turned off at the end
             for (uint8_t i = 0; i < numLit; ++i) {
-                turnOffLED((LED *) currentDisplay, litLEDs[i]);
+                removeLED((LED *) currentDisplay, ledsToFlickerOff[i]);
             }
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
         }
 
-        shuffleArray(litLEDs, numLit);
+        shuffleArray(ledsToFlickerOff, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
             if (RANDOM_IN_RANGE(0, flickerLoops) < loop) {
-                turnOffLED((LED *) currentDisplay, litLEDs[i]);
+                turnOffLED((LED *) currentDisplay, ledsToFlickerOff[i]);
             } else {
-                turnOnLED((LED *) currentDisplay, litLEDs[i]);
+                turnOnLED((LED *) currentDisplay, ledsToFlickerOff[i]);
             }
         }
         lastTickEffect = HAL_GetTick();
@@ -102,7 +89,7 @@ bool flickerOut(void) {
 }
 
 bool flickerIn(void) {
-    static uint8_t litLEDs[MATRIX_SIZE] = {0};
+    static uint8_t ledsToFlickerIn[MATRIX_SIZE] = {0};
     static uint8_t numLit = 0;
     static uint32_t lastTickEffect = 0;
     static uint8_t loop = 0;
@@ -111,9 +98,9 @@ bool flickerIn(void) {
     const uint32_t delayInterval = 50; // milliseconds
 
     if (!isInitialized) {
-        numLit = getLEDsWithEffect(litLEDs, (LED *) currentDisplay, FLICKER);
+        numLit = getChangedPixels(ledsToFlickerIn, FLICKER);
         if (numLit == 0) {
-            return true;
+            return false;
         }
         loop = 0;
         lastTickEffect = HAL_GetTick();
@@ -124,24 +111,28 @@ bool flickerIn(void) {
         if (loop >= flickerLoops) {
             // Ensure all LEDs are turned on at the end
             for (uint8_t i = 0; i < numLit; ++i) {
-                turnOnLED((LED *) currentDisplay, litLEDs[i]);
+            	currentDisplay[ledsToFlickerIn[i]] = targetDisplay[ledsToFlickerIn[i]];
+                turnOnLED((LED *) currentDisplay, ledsToFlickerIn[i]);
             }
             // Reset for next call or trigger completion
             isInitialized = false; // Reset the state
             return false; // Finish the effect
         }
 
-        shuffleArray(litLEDs, numLit);
+        shuffleArray(ledsToFlickerIn, numLit);
         for (uint8_t i = 0; i < numLit; ++i) {
+        	currentDisplay[ledsToFlickerIn[i]] = targetDisplay[ledsToFlickerIn[i]];
             if (RANDOM_IN_RANGE(0, flickerLoops) > loop) {
-                turnOffLED((LED *) currentDisplay, litLEDs[i]);
+                turnOffLED((LED *) currentDisplay, ledsToFlickerIn[i]);
             } else {
-                turnOnLED((LED *) currentDisplay, litLEDs[i]);
+                turnOnLED((LED *) currentDisplay, ledsToFlickerIn[i]);
             }
         }
         lastTickEffect = HAL_GetTick();
         loop++;
     }
+
+
     return true;
 }
 

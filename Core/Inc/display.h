@@ -21,5 +21,8 @@ void advanceDisplay(Effect effect);
 void sendDisplayToDMA(void);
 void updateDisplayColor(void);
 void removeBitmapFromDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display);
+bool displaysAreDifferent(Effect effect);
+uint32_t getChangedPixels(uint8_t *result, Effect effect);
+void wipeDisplay(LED *display);
 
 #endif /* INC_DISPLAY_H_ */

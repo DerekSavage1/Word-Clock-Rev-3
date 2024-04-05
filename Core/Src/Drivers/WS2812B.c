@@ -140,7 +140,7 @@ void updatePwmBuffer(LED *currentFrame) {
 
 void DMA_Send() {
 
-    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmBuffer, PWM_ARRAY_SIZE + 1);
+    HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmBuffer, PWM_ARRAY_SIZE);
 	while (!datasentflag) {}
 	datasentflag = 0;
 
