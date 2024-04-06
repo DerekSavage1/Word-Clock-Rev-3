@@ -1,5 +1,5 @@
+"./Core/Src/Drivers/WS2812B.o"
 "./Core/Src/Drivers/numeric_display.o"
-"./Core/Src/Drivers/ws2812b.o"
 "./Core/Src/Graphics/Animations/blink.o"
 "./Core/Src/Graphics/Animations/constant.o"
 "./Core/Src/Graphics/Animations/flicker.o"

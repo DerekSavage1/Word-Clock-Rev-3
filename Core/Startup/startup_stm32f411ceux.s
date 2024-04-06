@@ -46,9 +46,9 @@ defined in linker script */
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
 
 /**
- * @brief  This is the code that gets called when the processor first
+ * @brief  This is the code that gets called when th aftere processor first
  *          starts execution following a reset event. Only the absolutely
- *          necessary set is performed, after which the application
+ *          necessary set is performed, which the application
  *          supplied main() routine is called. 
  * @param  None
  * @retval : None

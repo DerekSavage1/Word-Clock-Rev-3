@@ -9,7 +9,7 @@
 
 volatile int datasentflag;
 extern TIM_HandleTypeDef htim1;
-uint16_t pwmData[(24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
+uint16_t pwmData[RESET_SLOTS + (24 * NUM_LEDS) + RESET_SLOTS]; // Each LED requires 24 bits.
 
 static uint16_t pwmBuffer[PWM_ARRAY_SIZE] = {0};
 
@@ -89,6 +89,10 @@ void wipePWMBuffer(void) {
     for(int i = 0; i < PWM_ARRAY_SIZE; i++) {
         pwmBuffer[i] = ZERO;
     }
+
+    for(int i = MATRIX_SIZE * 24; i < PWM_ARRAY_SIZE; i++) {
+        pwmBuffer[i] = RESET;
+    }
 }
 
 /**
@@ -106,7 +110,7 @@ void updatePwmBuffer(LED *currentFrame) {
 
     wipePWMBuffer();
 
-    for(int ledNumber = 0; ledNumber < MATRIX_SIZE; ledNumber++) {
+    for(int ledNumber = 0 ; ledNumber < MATRIX_SIZE; ledNumber++) {
 
         if(!currentFrame[ledNumber].on) {
             continue;
@@ -140,6 +144,7 @@ void updatePwmBuffer(LED *currentFrame) {
 
 void DMA_Send() {
 
+	HAL_Delay(1);
     HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*)pwmBuffer, PWM_ARRAY_SIZE);
 	while (!datasentflag) {}
 	datasentflag = 0;
