@@ -7,7 +7,14 @@
 
 #include "menu.h"
 
+uint32_t menuTimeoutMs = 10000;
+
 void configureSettings(void) {
+
+	if(HAL_GetTick() - getLastTimeCounterChanged() > menuTimeoutMs) {
+        setDeviceState(SLEEP);
+
+	}
 
 	switch(getDeviceState()) {
 		case SLEEP:
@@ -80,26 +87,36 @@ void configureSettings(void) {
 				}
 			} else {
 				//delete mode
-				uint8_t lowerBound = 2 + isAnniversarySet();
-				uint8_t upperBound = 2 + !isBirthdaySet();
+				uint8_t lowerBound;
+				uint8_t upperBound;
+
+				if(isBirthdaySet() && isAnniversarySet()) {
+					lowerBound = 2;
+					upperBound = 3;
+				} else if(isBirthdaySet()) {
+					lowerBound = 2;
+					upperBound = 2;
+				} else {
+					lowerBound = 3;
+					upperBound = 3;
+				}
+
 				switch(getCounterWithinBounds(lowerBound, upperBound)) {
-				case 3: //0 anniversary
+				case 3:
 					addBitmapToDisplay(MENU_ANNIVERSARY, (LED *) currentDisplay, BLINK);
-					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
-					removeBitmapFromDisplay(MENU_SET, currentDisplay);
-					removeBitmapFromDisplay(MENU_COLOR, currentDisplay);
 					removeBitmapFromDisplay(MENU_BIRTHDAY, currentDisplay);
-					removeBitmapFromDisplay(MENU_TIME, currentDisplay);
 					break;
 				case 2:
 					addBitmapToDisplay(MENU_BIRTHDAY, (LED *) currentDisplay, BLINK);
-					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
-					removeBitmapFromDisplay(MENU_SET, currentDisplay);
-					removeBitmapFromDisplay(MENU_COLOR, currentDisplay);
 					removeBitmapFromDisplay(MENU_ANNIVERSARY, currentDisplay);
-					removeBitmapFromDisplay(MENU_TIME, currentDisplay);
 					break;
 				}
+
+				addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
+				removeBitmapFromDisplay(MENU_SET, currentDisplay);
+				removeBitmapFromDisplay(MENU_COLOR, currentDisplay);
+
+				removeBitmapFromDisplay(MENU_TIME, currentDisplay);
 			}
 			break;
 		case SET_HOURS:
@@ -116,7 +133,14 @@ void configureSettings(void) {
 			break;
 		case SET_MONTH:
 			addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
-			addBitmapToDisplay(MENU_TIME, (LED *) currentDisplay, CONSTANT);
+			if(getDateState() == SYSTEM_DATE) {
+				addBitmapToDisplay(MENU_TIME, (LED *) currentDisplay, CONSTANT);
+			} else if(getDateState() == BIRTHDAY_DATE) {
+				addBitmapToDisplay(MENU_BIRTHDAY, (LED *) currentDisplay, CONSTANT);
+			} else {
+				addBitmapToDisplay(MENU_ANNIVERSARY, (LED *) currentDisplay, CONSTANT);
+			}
+
 			getCounterWithinBounds(0, 12);
 			setDisplayString("%02d%02d", getCounterWithinBounds(1, 12), getDate(getDateState())->Date);
 		    getDate(getDateState())->Month = (uint8_t) getCounterWithinBounds(0, 12);

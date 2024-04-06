@@ -78,6 +78,7 @@ bool isBirthdaySet(void);
 void deleteBirthday(void);
 void deleteAnniversary(void);
 uint8_t getBrightness(void);
+uint32_t getLastTimeCounterChanged(void);
 
 
 #endif /* INC_SETTINGS_H_ */

@@ -26,6 +26,8 @@ bool checkButtonPress(void) {
     }
 }
 
+extern uint32_t lastTickMenu = 0;
+
 void switchState() {
     switch(getDeviceState()) {
         case SLEEP:
@@ -35,6 +37,7 @@ void switchState() {
         case WAKE:
             setDeviceState(SELECT);
         	setCounter(0);
+        	lastTickMenu = HAL_GetTick();
             break;
         case SELECT:
         	switch(3-getCounterWithinBounds(0, 3)){
@@ -119,6 +122,7 @@ void switchState() {
         	default:
         		break;
         	}
+
             break;
         case SET_HOURS:
 
