@@ -57,9 +57,11 @@ void switchState() {
 
 				addBitmapToDisplay(MENU_COLOR, (LED *) currentDisplay, CONSTANT);
 				if(getMode() == SET_MODE) {
+	        		setDateState(SYSTEM_DATE);
 					addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
 					removeBitmapFromDisplay(MENU_DELETE, currentDisplay);
 				} else {
+	        		setDateState(SYSTEM_DATE);
 					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
 					removeBitmapFromDisplay(MENU_SET, currentDisplay);
 				}
@@ -84,6 +86,7 @@ void switchState() {
 				} else {
 					deleteBirthday();
 					setDeviceState(SLEEP);
+	        		setDateState(SYSTEM_DATE);
 					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
 					removeBitmapFromDisplay(MENU_SET, currentDisplay);
 				}
@@ -104,6 +107,7 @@ void switchState() {
 	            	setDeviceState(SET_MONTH);
 				} else {
 					deleteAnniversary();
+	        		setDateState(SYSTEM_DATE);
 					setDeviceState(SLEEP);
 					addBitmapToDisplay(MENU_DELETE, (LED *) currentDisplay, CONSTANT);
 					removeBitmapFromDisplay(MENU_SET, currentDisplay);

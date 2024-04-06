@@ -150,9 +150,7 @@ int main(void)
 
 
 
-	updateDisplay(sTime);
-
-
+	flicker(sTime);
 	rainbow(5);
 	twinkle();
 	blink();

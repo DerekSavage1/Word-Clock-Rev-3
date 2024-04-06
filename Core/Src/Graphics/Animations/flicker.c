@@ -12,7 +12,7 @@ static RTC_TimeTypeDef previousDisplayedTime = {0}; // Initialize to some value
 bool needToUpdateDisplay = true;
 bool isFlickering = false;
 
-void updateDisplay(RTC_TimeTypeDef currentTime) {
+void flicker(RTC_TimeTypeDef currentTime) {
 
 	display_time(currentTime.Hours, currentTime.Minutes);
 
@@ -54,7 +54,6 @@ bool flickerOut(void) {
 
     if (!isInitialized) {
     	numLit = getChangedPixels(ledsToFlickerOff, FLICKER);
-        numLit = getLEDsWithEffect(ledsToFlickerOff, (LED *) currentDisplay, FLICKER);
         if (numLit == 0) {
             return false; // Function did not start flickering, return false
         }

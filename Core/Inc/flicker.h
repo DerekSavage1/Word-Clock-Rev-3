@@ -22,6 +22,6 @@ typedef enum FlickerState {
 bool flickerOut(void);
 bool flickerIn(void);
 void checkUpdateTime(RTC_TimeTypeDef currentTime);
-void updateDisplay(RTC_TimeTypeDef currentTime);
+void flicker(RTC_TimeTypeDef currentTime);
 
 

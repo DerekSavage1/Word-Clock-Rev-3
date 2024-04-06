@@ -76,15 +76,17 @@ uint32_t getChangedPixels(uint8_t *result, Effect effect) {
 
     for(int i = 0; i < MATRIX_SIZE; i++) {
 
+    	if(targetDisplay[i].effect != effect && currentDisplay[i].effect != effect) {
+    		continue;
+    	}
+
         if(currentDisplay[i].red != targetDisplay[i].red
            || currentDisplay[i].green != targetDisplay[i].green
            || currentDisplay[i].blue != targetDisplay[i].blue
            || currentDisplay[i].on != targetDisplay[i].on) {
-        	if(targetDisplay[i].effect == effect
-        			||currentDisplay[i].effect == effect); {
-                result[changedPixels] = i;
-                changedPixels++;
-        	}
+
+			result[changedPixels] = i;
+			changedPixels++;
         }
     }
 

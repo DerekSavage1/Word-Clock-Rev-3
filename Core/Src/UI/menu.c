@@ -122,7 +122,6 @@ void configureSettings(void) {
 		    getDate(getDateState())->Month = (uint8_t) getCounterWithinBounds(0, 12);
 			break;
 		case SET_DAY:;
-		//FIXME: if the time changes to a 5m interval it will advance frame and erase the menu selections
 		    uint8_t maxDay;
 		    uint8_t selectedMonth = getDate(getDateState())->Month;
 
@@ -134,7 +133,7 @@ void configureSettings(void) {
 		        maxDay = 31;
 		    }
 
-		    setDisplayString("%02d%02d", selectedMonth, getCounterWithinBounds(0, maxDay));
+			setDisplayString("%02d%02d", getDate(getDateState())->Month, getCounterWithinBounds(1, maxDay));
 
 		case SET_YEAR:
 			setDisplayString("20%02d", getCounterWithinBounds(0, 99));
