@@ -79,6 +79,8 @@ void display_time(uint8_t hour, uint8_t minute) {
     if (roundedMinute > 0) {
         addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, FLICKER);
     }
+
+    display_date();
 }
 
 void display_date() {

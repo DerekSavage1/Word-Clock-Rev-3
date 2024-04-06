@@ -1,4 +1,4 @@
 ../Core/Src/Graphics/time_display.c:38:6:display_time	24	static
-../Core/Src/Graphics/time_display.c:84:6:display_date	16	static
-../Core/Src/Graphics/time_display.c:100:6:display_anniversary	16	static
-../Core/Src/Graphics/time_display.c:110:6:display_birthday	16	static
+../Core/Src/Graphics/time_display.c:86:6:display_date	16	static
+../Core/Src/Graphics/time_display.c:102:6:display_anniversary	16	static
+../Core/Src/Graphics/time_display.c:112:6:display_birthday	16	static

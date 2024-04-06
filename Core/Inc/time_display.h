@@ -21,5 +21,6 @@ extern const uint16_t *minuteBitmaps[];
 void display_birthday(void);
 void display_anniversary(void);
 void display_time(uint8_t hour, uint8_t minute);
+void display_date();
 
 #endif /* INC_TIME_DISPLAY_H_ */

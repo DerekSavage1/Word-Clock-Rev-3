@@ -13,14 +13,23 @@ extern LED currentDisplay[MATRIX_SIZE];
 
 static HsvColor lastColor = {0};
 bool init = false;
+uint32_t lastTickRainbow = 0;
+uint32_t rainbowDelay = 357;
 
 void setupRainbow(void) {
 	uint8_t rainbow[MATRIX_SIZE];
 	uint32_t size = getLEDsWithEffect(rainbow, (LED *) currentDisplay, RAINBOW);
 
+	if(HAL_GetTick() - lastTickRainbow < rainbowDelay) {
+		return;
+	}
+
+	lastTickRainbow = HAL_GetTick();
+
+	lastColor.h++;
+	RgbColor rgb = hsvToRgb(lastColor);
 	for(uint8_t i = 0; i < size; i++) {
-		lastColor.h++;
-		RgbColor rgb = hsvToRgb(lastColor);
+
 		currentDisplay[rainbow[i]].red = rgb.r;
 		currentDisplay[rainbow[i]].blue = rgb.g;
 		currentDisplay[rainbow[i]].green = rgb.b;
@@ -40,7 +49,7 @@ void advanceRainbow(uint8_t brightness) {
 		HsvColor hsv = rgbToHsv(ledrgb);
 
 		hsv.s = 255;
-		hsv.v = brightness;
+		hsv.v = getBrightnessAsPercent();
 		hsv.h++;
 
 		RgbColor rgb = hsvToRgb(hsv);
@@ -53,13 +62,13 @@ void advanceRainbow(uint8_t brightness) {
 
 void rainbow(uint8_t brightness) {
 
-	if(!init) {
-		lastColor.s = 255;
-		lastColor.v = brightness;
-		setupRainbow();
-		init = !init;
-		return;
-	}
+//	if(!init) {
+//		lastColor.s = 255;
+//		lastColor.v = getBrightness();
+//		setupRainbow();
+//		init = !init;
+//		return;
+//	}
 
 	setupRainbow();
 //	advanceRainbow(brightness);

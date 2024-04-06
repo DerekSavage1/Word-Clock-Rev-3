@@ -18,6 +18,7 @@
 #include "ws2812b.h"
 #include "display.h"
 
+
 #define MAX_STRING_LENGTH 10
 #define SENSITIVITY 10
 
@@ -57,13 +58,13 @@ RgbColor getColor(void);
 DateType getDateState(void);
 RTC_DateTypeDef* getDate(DateType type);
 void setDateState(DateType _dateState);
-uint8_t getBrightness(void);
-void setBrightness(uint8_t _brightness);
+uint8_t getBrightnessAsPercent(void);
+void setBrightnessAsPercent(uint8_t _brightness);
 uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal);
 uint32_t getCounter(void);
 void setMode(Mode _mode);
 Mode getMode(void);
-uint8_t getBrightness(void);
+uint8_t getBrightnessAsPercent(void);
 char *getDisplayString(void);
 void setDisplayString(const char *format, ...);
 uint32_t clamp(uint32_t value, uint32_t minVal, uint32_t maxVal);
@@ -76,6 +77,7 @@ bool isAnniversarySet(void);
 bool isBirthdaySet(void);
 void deleteBirthday(void);
 void deleteAnniversary(void);
+uint8_t getBrightness(void);
 
 
 #endif /* INC_SETTINGS_H_ */

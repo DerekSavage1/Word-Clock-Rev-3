@@ -33,7 +33,7 @@ RgbColor adjustBrightness(RgbColor color) {
 
 void twinkle() {
 
-	uint8_t userBrightness = getBrightness();
+	uint8_t userBrightness = getBrightnessAsPercent();
 
 	uint8_t twinkleLEDs[MATRIX_SIZE];
 

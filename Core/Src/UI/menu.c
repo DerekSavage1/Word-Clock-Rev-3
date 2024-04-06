@@ -134,7 +134,7 @@ void configureSettings(void) {
 		    }
 
 			setDisplayString("%02d%02d", getDate(getDateState())->Month, getCounterWithinBounds(1, maxDay));
-
+			break;
 		case SET_YEAR:
 			setDisplayString("20%02d", getCounterWithinBounds(0, 99));
 		    getDate(getDateState())->Year = (uint8_t) getCounterWithinBounds(0, 99);
@@ -142,15 +142,15 @@ void configureSettings(void) {
 		case SET_COLOR:
 			addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
 			addBitmapToDisplay(MENU_COLOR, (LED *) currentDisplay, CONSTANT);
-			setDisplayString("%02d", getCounterWithinBounds(0, 16));
-			setColorWithPreset(getCounterWithinBounds(0, 16));
+			setDisplayString("%02d", getCounterWithinBounds(0, 100));
+			setColorWithPreset(getCounterWithinBounds(0, 100));
 			updateDisplayColor();
 			break;
 		case SET_BRIGHTNESS:
 			addBitmapToDisplay(MENU_SET, (LED *) currentDisplay, CONSTANT);
 			addBitmapToDisplay(MENU_COLOR, (LED *) currentDisplay, CONSTANT);
 			setDisplayString("%02d", getCounterWithinBounds(1, 100));
-			setBrightness(getCounterWithinBounds(1, 100));
+			setBrightnessAsPercent(getCounterWithinBounds(1, 100));
 			updateDisplayColor();
 			break;
 		default:

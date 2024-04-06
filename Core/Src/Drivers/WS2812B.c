@@ -125,7 +125,7 @@ void updatePwmBuffer(LED *currentFrame) {
         // ws2812b is GRB, so we swap the positions of red and green
         for(int bit = 0; bit < 8; bit++) {
 
-            if(green & (1 << bit)) {
+            if(blue & (1 << bit)) {
                 pwmBuffer[arrayIndex + 16 + (7 - bit)] = ONE;
             }
 
@@ -133,7 +133,7 @@ void updatePwmBuffer(LED *currentFrame) {
                 pwmBuffer[arrayIndex + 8 + (7 - bit)] = ONE;
             }
 
-            if(blue & (1 << bit)) {
+            if(green & (1 << bit)) {
                 pwmBuffer[arrayIndex + (7 - bit)] = ONE;
             }
         }

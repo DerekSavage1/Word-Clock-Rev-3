@@ -156,7 +156,7 @@ void switchState() {
         	break;
         case SET_COLOR:
         	setCounterBounds(0,100);
-        	setCounter(getBrightness());
+        	setCounter(getBrightnessAsPercent());
             setDeviceState(SET_BRIGHTNESS); // After color, set brightness
             break;
         case SET_BRIGHTNESS:

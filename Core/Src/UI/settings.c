@@ -25,7 +25,7 @@ static uint32_t minVal = 0;
 static uint32_t maxVal = 2000; // (2^32 - 1)
 RgbColor color;
 RgbColor brightnessColor;
-uint8_t colorPreset;
+uint8_t colorSelection;
 
 #define UNDERFLOW_TRIGGER 65500
 
@@ -113,7 +113,7 @@ void setColor(RgbColor _color) {
 
 RgbColor getColor(void) {
 	const uint8_t gamma_lut[256] = {
-	     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,
+	     1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
 	     1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   4,   4,
 	     4,   4,   5,   5,   5,   5,   6,   6,   6,   7,   7,   7,   8,   8,   8,   9,
 	     9,   9,  10,  10,  11,  11,  11,  12,  12,  13,  13,  14,  14,  15,  15,  16,
@@ -150,6 +150,10 @@ void setDateState(DateType _dateState) {
 	dateState = _dateState;
 }
 
+uint8_t getBrightnessAsPercent(void) {
+	return (brightness * 100) / 255;
+}
+
 uint8_t getBrightness(void) {
 	return brightness;
 }
@@ -174,105 +178,30 @@ void setDisplayString(const char *format, ...) {
 }
 
 uint8_t getColorPreset(void) {
-	return colorPreset;
+	return (colorSelection * 100) / 255;
 }
 
-void setColorWithPreset(uint32_t _preset) {
-	colorPreset = _preset;
-    switch (colorPreset) {
-        case 1:
-            color.r = 255; // r
-            color.g = 0;
-            color.b = 0;
-            break;
-        case 2:
-            color.r = 255; // Orange
-            color.g = 165;
-            color.b = 0;
-            break;
-        case 3:
-            color.r = 255; // Yellow
-            color.g = 255;
-            color.b = 0;
-            break;
-        case 4:
-            color.r = 0; // g
-            color.g = 255;
-            color.b = 0;
-            break;
-        case 5:
-            color.r = 0; // b
-            color.g = 0;
-            color.b = 255;
-            break;
-        case 6:
-            color.r = 75; // Indigo
-            color.g = 0;
-            color.b = 130;
-            break;
-        case 7:
-            color.r = 128; // Violet
-            color.g = 0;
-            color.b = 128;
-            break;
-        case 8:
-            color.r = 255; // r-Orange
-            color.g = 69;
-            color.b = 0;
-            break;
-        case 9:
-            color.r = 255; // Orange-Yellow
-            color.g = 215;
-            color.b = 0;
-            break;
-        case 10:
-            color.r = 154; // Yellow-g
-            color.g = 205;
-            color.b = 50;
-            break;
-        case 11:
-            color.r = 0; // g-b
-            color.g = 255;
-            color.b = 255;
-            break;
-        case 12:
-            color.r = 138; // b-Indigo
-            color.g = 43;
-            color.b = 226;
-            break;
-        case 13:
-            color.r = 186; // Indigo-Violet
-            color.g = 85;
-            color.b = 211;
-            break;
-        case 14:
-            color.r = 255; // Violet-r
-            color.g = 0;
-            color.b = 255;
-            break;
-        case 15:
-            color.r = 255; // Pink
-            color.g = 192;
-            color.b = 203;
-            break;
-        case 16:
-            color.r = 255; // White
-            color.g = 255;
-            color.b = 255;
-            break;
-        default:
-            color.r = 255; // White for an undefined preset
-            color.g = 255;
-            color.b = 255;
-    }
+void setColorWithPreset(uint32_t selection) {
 
-	updatePwmBuffer((LED *) currentDisplay);
-	DMA_Send();
+	if(selection == 0) {
+		color.r = 0xFF;
+		color.g = 0xFF;
+		color.b = 0xFF;
+	} else {
+		colorSelection = (selection * 255) / 100;
 
+	    HsvColor hsv;
+	    hsv.s = 255;
+	    hsv.v = 255;
+	    hsv.h = colorSelection;
+
+	    color = hsvToRgb(hsv);
+
+	}
 }
 
-void setBrightness(uint8_t _brightness) {
-	brightness = _brightness;
+void setBrightnessAsPercent(uint8_t _brightness) {
+	brightness = (_brightness * 255) / 100;
 }
 
 bool isAnniversarySet(void) {

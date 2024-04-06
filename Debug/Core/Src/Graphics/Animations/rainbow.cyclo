@@ -1,3 +1,3 @@
-../Core/Src/Graphics/Animations/rainbow.c:17:6:setupRainbow	2
-../Core/Src/Graphics/Animations/rainbow.c:31:6:advanceRainbow	2
-../Core/Src/Graphics/Animations/rainbow.c:54:6:rainbow	2
+../Core/Src/Graphics/Animations/rainbow.c:19:6:setupRainbow	3
+../Core/Src/Graphics/Animations/rainbow.c:39:6:advanceRainbow	2
+../Core/Src/Graphics/Animations/rainbow.c:62:6:rainbow	1
