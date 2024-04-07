@@ -18,6 +18,7 @@ bool checkButtonPress(void) {
     if (lastButtonState == GPIO_PIN_SET && currentButtonState == GPIO_PIN_RESET) {
         // Button was pressed - perform actions here.
         lastButtonState = currentButtonState; // Update the last button state.
+        setLastUserInput(HAL_GetTick());
         return true;
     } else {
         // Update the last button state.
@@ -27,6 +28,7 @@ bool checkButtonPress(void) {
 }
 
 extern uint32_t lastTickMenu = 0;
+extern RTC_HandleTypeDef hrtc;
 
 void switchState() {
     switch(getDeviceState()) {
@@ -125,20 +127,21 @@ void switchState() {
 
             break;
         case SET_HOURS:
-
         	setCounter(getTime()->Minutes);
             setDeviceState(SET_MINUTES);
+            HAL_RTC_SetTime(&hrtc, getTime(), RTC_FORMAT_BIN);
             break;
         case SET_MINUTES:
         	setCounter(getDate(SYSTEM_DATE)->Month);
             setDeviceState(SET_MONTH);
+            HAL_RTC_SetTime(&hrtc, getTime(), RTC_FORMAT_BIN);
             break;
         case SET_MONTH:;
         	RTC_DateTypeDef nDate = *getDate(getDateState());
         	nDate.Month = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	setCounter(getDate(getDateState())->Date);
-
+        	HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
         	setDeviceState(SET_DAY);
 
         	break;
@@ -147,6 +150,7 @@ void switchState() {
         	nDate.Date = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	if (getDateState() != SYSTEM_DATE) {
+        		HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
         		setDeviceState(SLEEP);
         		return;
         	}
@@ -157,6 +161,9 @@ void switchState() {
         	nDate.Year = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	setDeviceState(SLEEP);
+        	if(getDateState() == SYSTEM_DATE) {
+            	HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
+        	}
         	break;
         case SET_COLOR:
         	setCounterBounds(0,100);

@@ -4,8 +4,8 @@
 ../Core/Src/UI/settings.c:50:6:setDeviceState	1
 ../Core/Src/UI/settings.c:54:10:getCounter	1
 ../Core/Src/UI/settings.c:59:10:getCounterWithinBounds	1
-../Core/Src/UI/settings.c:66:10:getLastTimeCounterChanged	1
-../Core/Src/UI/settings.c:70:6:setLastTimeCounterChanged	1
+../Core/Src/UI/settings.c:66:10:getLastUserInput	1
+../Core/Src/UI/settings.c:70:6:setLastUserInput	1
 ../Core/Src/UI/settings.c:74:6:setCounter	2
 ../Core/Src/UI/settings.c:83:10:getSelected	1
 ../Core/Src/UI/settings.c:87:18:getTime	1

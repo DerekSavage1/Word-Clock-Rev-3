@@ -7,11 +7,11 @@
 
 #include "menu.h"
 
-uint32_t menuTimeoutMs = 10000;
+uint32_t menuTimeoutMs = 50000;
 
 void configureSettings(void) {
 
-	if(HAL_GetTick() - getLastTimeCounterChanged() > menuTimeoutMs) {
+	if(HAL_GetTick() - getLastUserInput() > menuTimeoutMs) {
         setDeviceState(SLEEP);
 
 	}

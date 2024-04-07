@@ -1,4 +1,4 @@
-../Core/Src/Drivers/numeric_display.c:14:6:setSegments	1
-../Core/Src/Drivers/numeric_display.c:25:6:wipeSegments	1
-../Core/Src/Drivers/numeric_display.c:37:6:activateDigit	1
-../Core/Src/Drivers/numeric_display.c:47:6:Segment_Display	41
+../Core/Src/Drivers/Numeric_Display.c:14:6:setSegments	1
+../Core/Src/Drivers/Numeric_Display.c:25:6:wipeSegments	1
+../Core/Src/Drivers/Numeric_Display.c:37:6:activateDigit	1
+../Core/Src/Drivers/Numeric_Display.c:47:6:Segment_Display	41

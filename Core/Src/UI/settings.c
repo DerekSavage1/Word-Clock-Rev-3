@@ -26,7 +26,7 @@ static uint32_t maxVal = 2000; // (2^32 - 1)
 RgbColor color;
 RgbColor brightnessColor;
 uint8_t colorSelection;
-uint32_t counterLastChanged;
+uint32_t lastInputMs;
 
 #define UNDERFLOW_TRIGGER 65500
 
@@ -63,18 +63,18 @@ uint32_t getCounterWithinBounds(uint32_t _minVal, uint32_t _maxVal) {
 	return clamp(__HAL_TIM_GET_COUNTER(&htim3), minVal, maxVal);
 }
 
-uint32_t getLastTimeCounterChanged(void) {
-	return counterLastChanged;
+uint32_t getLastUserInput(void) {
+	return lastInputMs;
 }
 
-void setLastTimeCounterChanged(uint32_t _counterLastChanged) {
-	counterLastChanged = _counterLastChanged;
+void setLastUserInput(uint32_t _counterLastChanged) {
+	lastInputMs = _counterLastChanged;
 }
 
 void setCounter(uint32_t _counter) {
 	setCounterBounds(0,-1);
 	if(_counter != counter) {
-		counterLastChanged = HAL_GetTick();
+		lastInputMs = HAL_GetTick();
 	}
 	counter = clamp(_counter, minVal, maxVal);
 	__HAL_TIM_SET_COUNTER(&htim3, clamp(_counter, minVal, maxVal));

@@ -40,7 +40,26 @@ void display_time(uint8_t hour, uint8_t minute) {
 	wipeDisplay((LED *) targetDisplay);
     addBitmapToDisplay(BMP_ITS, (LED *) targetDisplay, FLICKER);
 
-    // Round down to the nearest five minutes and determine if it is 'past' or 'to' the hour
+    switch(minute % 5) {
+    case 1:
+    	addBitmapToDisplay(MINUTE_ONE, (LED *) targetDisplay, FLICKER);
+    	break;
+    case 2:
+    	addBitmapToDisplay(MINUTE_ONE, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_TWO, (LED *) targetDisplay, FLICKER);
+    	break;
+    case 3:
+    	addBitmapToDisplay(MINUTE_ONE, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_TWO, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_THREE, (LED *) targetDisplay, FLICKER);
+    	break;
+    case 4:
+    	addBitmapToDisplay(MINUTE_ONE, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_TWO, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_THREE, (LED *) targetDisplay, FLICKER);
+    	addBitmapToDisplay(MINUTE_FOUR, (LED *) targetDisplay, FLICKER);
+    	break;
+    }
     int roundedMinute = (minute / 5) * 5;
     if (roundedMinute > 0) {
         if (roundedMinute < 35) {
@@ -52,30 +71,25 @@ void display_time(uint8_t hour, uint8_t minute) {
         }
     }
 
-    // Normalize the hour to a 12-hour format and display AM/PM where applicable
     hour %= 24; // Normalize hour to 0-23
-    if(hour == 0 || hour == 12) {
-        // It's exactly midnight or noon, so we will handle it in the hour display section.
+    if(hour == 0) {
+        addBitmapToDisplay(HOUR_MIDNIGHT, (LED *) targetDisplay, FLICKER);
+    } else if (hour == 12) {
+        addBitmapToDisplay(HOUR_NOON, (LED *) targetDisplay, FLICKER);
     } else if (hour < 12) {
         addBitmapToDisplay(BMP_AM, (LED *) targetDisplay, FLICKER);
     } else {
         addBitmapToDisplay(BMP_PM, (LED *) targetDisplay, FLICKER);
     }
 
-    // Display the hour, normalizing hour again for 12-hour format with special cases for noon and midnight
     if (hour > 12) {
         hour -= 12; // Convert to 12-hour format
     }
-    if (hour == 0) {
-        hour = 12; // Adjust for midnight/noon display
-    }
 
-    // Use an array to simplify hour display logic
-    if(hour >= 1 && hour <= 12) {
+    if(hour >= 1 && hour < 12) {
         addBitmapToDisplay(hourBitmaps[hour % 12], (LED *) targetDisplay, FLICKER);
     }
 
-    // Display the minute in intervals of five using an array pointing to the bitmaps
     if (roundedMinute > 0) {
         addBitmapToDisplay(minuteBitmaps[(roundedMinute / 5) - 1], (LED *) targetDisplay, FLICKER);
     }

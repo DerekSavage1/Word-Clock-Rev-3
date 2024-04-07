@@ -24,7 +24,6 @@ void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effe
             	display[ledNumber].green = color.g;
             	display[ledNumber].blue = color.b;
             	display[ledNumber].effect = effect;
-            	display[ledNumber].on = true;
             }
 
         }
@@ -64,8 +63,7 @@ bool displaysAreDifferent(Effect effect) {
 		if(currentDisplay[i].red != targetDisplay[i].red
 				|| currentDisplay[i].green != targetDisplay[i].green
 				|| currentDisplay[i].blue != targetDisplay[i].blue
-				|| currentDisplay[i].effect != targetDisplay[i].effect
-				|| currentDisplay[i].on != targetDisplay[i].on) {
+				|| currentDisplay[i].effect != targetDisplay[i].effect) {
 			return true;
     	}
     }
@@ -82,8 +80,7 @@ uint32_t getChangedPixels(uint8_t *result, Effect effect) {
 
         if(currentDisplay[i].red != targetDisplay[i].red
            || currentDisplay[i].green != targetDisplay[i].green
-           || currentDisplay[i].blue != targetDisplay[i].blue
-           || currentDisplay[i].on != targetDisplay[i].on) {
+           || currentDisplay[i].blue != targetDisplay[i].blue) {
 
 			result[changedPixels] = i;
 			changedPixels++;

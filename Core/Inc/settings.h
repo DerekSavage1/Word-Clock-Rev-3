@@ -47,7 +47,7 @@ typedef enum Mode {
 } Mode;
 
 
-
+void setLastUserInput(uint32_t _counterLastChanged);
 DeviceState getDeviceState(void);
 void setDeviceState(DeviceState);
 uint32_t getSelected(void);
@@ -78,7 +78,7 @@ bool isBirthdaySet(void);
 void deleteBirthday(void);
 void deleteAnniversary(void);
 uint8_t getBrightness(void);
-uint32_t getLastTimeCounterChanged(void);
+uint32_t getLastUserInput(void);
 
 
 #endif /* INC_SETTINGS_H_ */
