@@ -54,6 +54,7 @@ void switchState() {
 					removeBitmapFromDisplay(MENU_SET, currentDisplay);
 				}
 
+				setDateState(SYSTEM_DATE);
 				setCounter(getTime()->Hours);
         		setDeviceState(SET_HOURS);
 
@@ -142,27 +143,32 @@ void switchState() {
         	setDate(nDate, getDateState());
         	setCounter(getDate(getDateState())->Date);
         	setDeviceState(SET_DAY);
-
+        	if(getDateState() == SYSTEM_DATE) {
+        		HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
+        	}
         	break;
         case SET_DAY:
         	nDate = *getDate(getDateState());
         	nDate.Date = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
-        	if (getDateState() != SYSTEM_DATE) {
+        	if(getDateState() == SYSTEM_DATE) {
+        		HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
+        	} else {
         		setDateState(SYSTEM_DATE);
         		setDeviceState(SLEEP);
         		return;
         	}
-
+        	setCounter(getDate(getDateState())->Year);
         	setDeviceState(SET_YEAR);
         	break;
         case SET_YEAR:
         	nDate = *getDate(getDateState());
+        	setCounter(nDate.Year);
         	nDate.Year = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	setDeviceState(SLEEP);
         	if(getDateState() == SYSTEM_DATE) {
-            	HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
+        		HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
         	}
         	break;
         case SET_COLOR:
