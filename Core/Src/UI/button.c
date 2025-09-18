@@ -141,7 +141,6 @@ void switchState() {
         	nDate.Month = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	setCounter(getDate(getDateState())->Date);
-        	HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
         	setDeviceState(SET_DAY);
 
         	break;
@@ -150,10 +149,10 @@ void switchState() {
         	nDate.Date = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	if (getDateState() != SYSTEM_DATE) {
-        		HAL_RTC_SetDate(&hrtc, &nDate, RTC_FORMAT_BIN);
         		setDeviceState(SLEEP);
         		return;
         	}
+
         	setDeviceState(SET_YEAR);
         	break;
         case SET_YEAR:
