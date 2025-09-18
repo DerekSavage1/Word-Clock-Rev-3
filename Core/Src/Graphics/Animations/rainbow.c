@@ -9,70 +9,36 @@
 
 extern LED targetDisplay[MATRIX_SIZE];
 extern LED currentDisplay[MATRIX_SIZE];
+static RgbColor rainbowColor;
+
+void rainbow(RTC_TimeTypeDef currentTime) {
+
+		uint8_t leds[MATRIX_SIZE];
+	    uint32_t size = getLEDsWithEffect((uint8_t *) leds, (LED *) currentDisplay, RAINBOW);
+	    static bool isInitialized = false;
+	    const uint32_t delayIntervalMs = 1;
+	    static uint32_t lastTickEffect = 0;
+		static HsvColor hsv;
 
 
-static HsvColor lastColor = {0};
-bool init = false;
-uint32_t lastTickRainbow = 0;
-uint32_t rainbowDelay = 357;
 
-void setupRainbow(void) {
-	uint8_t rainbow[MATRIX_SIZE];
-	uint32_t size = getLEDsWithEffect(rainbow, (LED *) currentDisplay, RAINBOW);
+	    if (!isInitialized) {
+			lastTickEffect = HAL_GetTick();
+			isInitialized = true;
+			hsv.s = 255;
+			hsv.h = 0;
+		}
 
-	if(HAL_GetTick() - lastTickRainbow < rainbowDelay) {
-		return;
-	}
+	    hsv.v = fmax(getBrightnessAsPercent(), 5);
 
-	lastTickRainbow = HAL_GetTick();
+		if ((HAL_GetTick() - lastTickEffect) >= delayIntervalMs) {
+			hsv.h = hsv.h + 1;
+		}
 
-	lastColor.h++;
-	RgbColor rgb = hsvToRgb(lastColor);
-	for(uint8_t i = 0; i < size; i++) {
-
-		currentDisplay[rainbow[i]].red = rgb.r;
-		currentDisplay[rainbow[i]].blue = rgb.g;
-		currentDisplay[rainbow[i]].green = rgb.b;
-	}
+		rainbowColor = hsvToRgb(hsv);
 
 }
 
-void advanceRainbow(uint8_t brightness) {
-	uint8_t rainbow[MATRIX_SIZE];
-	uint32_t size = getLEDsWithEffect(rainbow, (LED *) currentDisplay, RAINBOW);
-
-	for(uint8_t i = 0; i < size; i++) {
-		RgbColor ledrgb;
-		ledrgb.r = currentDisplay[rainbow[i]].red;
-		ledrgb.b = currentDisplay[rainbow[i]].blue;
-		ledrgb.g = currentDisplay[rainbow[i]].green;
-		HsvColor hsv = rgbToHsv(ledrgb);
-
-		hsv.s = 255;
-		hsv.v = getBrightnessAsPercent();
-		hsv.h++;
-
-		RgbColor rgb = hsvToRgb(hsv);
-		currentDisplay[rainbow[i]].red = rgb.r;
-		currentDisplay[rainbow[i]].blue = rgb.b;
-		currentDisplay[rainbow[i]].green = rgb.g;
-
-	}
-}
-
-void rainbow(uint8_t brightness) {
-
-//	if(!init) {
-//		lastColor.s = 255;
-//		lastColor.v = getBrightness();
-//		setupRainbow();
-//		init = !init;
-//		return;
-//	}
-
-	setupRainbow();
-//	advanceRainbow(brightness);
-
-	updatePwmBuffer((LED *) currentDisplay);
-	DMA_Send();
+RgbColor getRainbowColor() {
+	return rainbowColor;
 }

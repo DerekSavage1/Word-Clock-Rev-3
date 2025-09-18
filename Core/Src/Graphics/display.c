@@ -20,6 +20,7 @@ void addBitmapToDisplay(const uint16_t matrix[MATRIX_HEIGHT], LED *display, Effe
             uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
 
             if(matrix[i] & (1 << j)) {
+            	display[ledNumber].on = true;
             	display[ledNumber].red = color.r;
             	display[ledNumber].green = color.g;
             	display[ledNumber].blue = color.b;
@@ -101,6 +102,10 @@ void updateDisplayColor(void) {
             uint8_t ledNumber = (MATRIX_WIDTH * i) + j;
 
         	if(currentDisplay[ledNumber].effect == RAINBOW) {
+        		RgbColor rainbowColor = getRainbowColor();
+    			currentDisplay[ledNumber].red = rainbowColor.r;
+    			currentDisplay[ledNumber].green = rainbowColor.g;
+    			currentDisplay[ledNumber].blue = rainbowColor.b;
         		continue;
         	}
 

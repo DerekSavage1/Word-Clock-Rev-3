@@ -102,33 +102,20 @@ void display_date() {
     		&& getDate(SYSTEM_DATE)->Date == getDate(BIRTHDAY_DATE)->Date) {
     	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
     	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, RAINBOW);
-    	addBitmapToDisplay(BMP_KATIE, (LED *) currentDisplay, RAINBOW);
-    }
-
-    if(getDate(SYSTEM_DATE)->Month == getDate(ANNIVERSARY_DATE)->Month
+    	addBitmapToDisplay(BMP_DEREK, (LED *) currentDisplay, RAINBOW);
+    } else if(getDate(SYSTEM_DATE)->Month == getDate(ANNIVERSARY_DATE)->Month
     		&& getDate(SYSTEM_DATE)->Date == getDate(ANNIVERSARY_DATE)->Date) {
     	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
     	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, RAINBOW);
     	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, RAINBOW);
+    } else {
+    	removeBitmapFromDisplay(BMP_HAPPY, (LED *) currentDisplay);
+    	removeBitmapFromDisplay(BMP_BIRTHDAY, (LED *) currentDisplay);
+    	removeBitmapFromDisplay(BMP_DEREK, (LED *) currentDisplay);
+    	removeBitmapFromDisplay(BMP_HAPPY, (LED *) currentDisplay);
+    	removeBitmapFromDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay);
+    	removeBitmapFromDisplay(BMP_KATIEDEREK, (LED *) currentDisplay);
     }
-}
 
-void display_anniversary(void) {
-	RgbColor color;
-	color.r = 5;
-	color.b = 5;
-	color.g = 5;
-	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
-	addBitmapToDisplay(BMP_ANNIVERSARY, (LED *) currentDisplay, RAINBOW);
-	addBitmapToDisplay(BMP_KATIEDEREK, (LED *) currentDisplay, RAINBOW);
-}
-
-void display_birthday(void) {
-	RgbColor color;
-	color.r = 5;
-	color.b = 5;
-	color.g = 5;
-	addBitmapToDisplay(BMP_HAPPY, (LED *) currentDisplay, RAINBOW);
-	addBitmapToDisplay(BMP_BIRTHDAY, (LED *) currentDisplay, RAINBOW);
-	addBitmapToDisplay(BMP_DEREK, (LED *) currentDisplay, RAINBOW);
+    //need to remove from bitmap but not here... maybe when date changes
 }

@@ -12,6 +12,7 @@
 #include "matrix.h"
 #include "color.h"
 #include "settings.h"
+#include "rainbow.h"
 
 extern LED targetDisplay[MATRIX_SIZE];
 extern LED currentDisplay[MATRIX_SIZE];

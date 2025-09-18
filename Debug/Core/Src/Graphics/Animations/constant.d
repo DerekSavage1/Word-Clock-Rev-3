@@ -31,7 +31,7 @@ Core/Src/Graphics/Animations/constant.o: \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Core/Inc/WS2812B.h ../Core/Inc/matrix.h ../Core/Inc/display.h \
  ../Core/Inc/ws2812b.h ../Core/Inc/color.h ../Core/Inc/settings.h \
- ../Core/Inc/ws2812b.h
+ ../Core/Inc/ws2812b.h ../Core/Inc/rainbow.h
 ../Core/Inc/constant.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -70,3 +70,4 @@ Core/Src/Graphics/Animations/constant.o: \
 ../Core/Inc/color.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/ws2812b.h:
+../Core/Inc/rainbow.h:

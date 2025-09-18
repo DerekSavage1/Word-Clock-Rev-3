@@ -1,3 +1,2 @@
-../Core/Src/Graphics/Animations/rainbow.c:19:6:setupRainbow	168	static
-../Core/Src/Graphics/Animations/rainbow.c:40:6:advanceRainbow	184	static
-../Core/Src/Graphics/Animations/rainbow.c:63:6:rainbow	16	static
+../Core/Src/Graphics/Animations/rainbow.c:14:6:rainbow	160	static
+../Core/Src/Graphics/Animations/rainbow.c:42:10:getRainbowColor	16	static

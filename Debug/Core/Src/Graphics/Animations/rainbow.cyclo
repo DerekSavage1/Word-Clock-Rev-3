@@ -1,3 +1,2 @@
-../Core/Src/Graphics/Animations/rainbow.c:19:6:setupRainbow	3
-../Core/Src/Graphics/Animations/rainbow.c:40:6:advanceRainbow	2
-../Core/Src/Graphics/Animations/rainbow.c:63:6:rainbow	1
+../Core/Src/Graphics/Animations/rainbow.c:14:6:rainbow	3
+../Core/Src/Graphics/Animations/rainbow.c:42:10:getRainbowColor	1

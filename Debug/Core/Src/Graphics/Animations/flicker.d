@@ -31,7 +31,8 @@ Core/Src/Graphics/Animations/flicker.o: \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Core/Inc/color.h ../Core/Inc/time_display.h ../Core/Inc/ws2812b.h \
  ../Core/Inc/matrix.h ../Core/Inc/display.h ../Core/Inc/settings.h \
- ../Core/Inc/ws2812b.h ../Core/Inc/random.h
+ ../Core/Inc/ws2812b.h ../Core/Inc/rainbow.h ../Core/Inc/WS2812B.h \
+ ../Core/Inc/random.h
 ../Core/Inc/flicker.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -70,4 +71,6 @@ Core/Src/Graphics/Animations/flicker.o: \
 ../Core/Inc/display.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/ws2812b.h:
+../Core/Inc/rainbow.h:
+../Core/Inc/WS2812B.h:
 ../Core/Inc/random.h:

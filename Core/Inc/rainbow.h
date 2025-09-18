@@ -13,8 +13,10 @@
 #include "display.h"
 #include "matrix.h"
 #include "WS2812B.h"
+#include "settings.h"
 #include <math.h>
 
-void rainbow(uint8_t brightness);
+void rainbow(RTC_TimeTypeDef currentTime);
+RgbColor getRainbowColor();
 
 #endif /* SRC_RAINBOW_H_ */

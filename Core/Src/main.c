@@ -151,10 +151,10 @@ int main(void)
 
 
 	flicker(sTime);
-	rainbow(5);
-	twinkle();
+	rainbow(sTime);
 	blink();
 	constant();
+	updateDisplayColor();
 
 	sendDisplayToDMA();
 

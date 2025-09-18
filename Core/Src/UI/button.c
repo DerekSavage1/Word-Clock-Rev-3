@@ -149,6 +149,7 @@ void switchState() {
         	nDate.Date = (uint8_t) getCounter();
         	setDate(nDate, getDateState());
         	if (getDateState() != SYSTEM_DATE) {
+        		setDateState(SYSTEM_DATE);
         		setDeviceState(SLEEP);
         		return;
         	}

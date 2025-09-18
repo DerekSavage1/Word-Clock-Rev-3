@@ -30,7 +30,8 @@ Core/Src/Graphics/time_display.o: ../Core/Src/Graphics/time_display.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Core/Inc/matrix.h ../Core/Inc/color.h ../Core/Inc/display.h \
- ../Core/Inc/settings.h ../Core/Inc/ws2812b.h
+ ../Core/Inc/settings.h ../Core/Inc/ws2812b.h ../Core/Inc/rainbow.h \
+ ../Core/Inc/WS2812B.h
 ../Core/Inc/time_display.h:
 ../Core/Inc/ws2812b.h:
 ../Core/Inc/main.h:
@@ -68,3 +69,5 @@ Core/Src/Graphics/time_display.o: ../Core/Src/Graphics/time_display.c \
 ../Core/Inc/display.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/ws2812b.h:
+../Core/Inc/rainbow.h:
+../Core/Inc/WS2812B.h:
